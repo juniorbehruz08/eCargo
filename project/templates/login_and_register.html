@@ -1,0 +1,953 @@
+<!doctype html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" href="{% static 'blog/logo.png' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Space+Mono:wght@400;700&display=swap"
+          rel="stylesheet">
+    <title>Login</title>
+    <style>
+        :root {
+            --ink: #0d0d0d;
+            --cream: #f7f3ec;
+            --sage: #2d4a3e;
+            --gold: #c9a84c;
+            --muted: #8a8a7a;
+            --border: rgba(13,13,13,0.12);
+            --input-bg: rgba(13,13,13,0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--cream);
+            font-family: 'Space Mono', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            position: relative;
+        }
+
+        .page::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            opacity: 0.35;
+        }
+
+        .form-shell {
+            width: 100%;
+            max-width: 460px;
+            background: rgba(255,255,255,0.72);
+            border: 1px solid rgba(13,13,13,0.08);
+            border-radius: 20px;
+            padding: 34px 28px;
+            box-shadow: 0 20px 60px rgba(13,13,13,0.08);
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(8px);
+        }
+
+        .form-panel {
+            display: none;
+            flex-direction: column;
+            animation: fadeSlideIn 0.45s ease both;
+        }
+
+        .form-panel.active {
+            display: flex;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-eyebrow {
+            font-size: 10px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 14px;
+        }
+
+        .form-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(32px, 4vw, 46px);
+            font-weight: 600;
+            color: var(--ink);
+            line-height: 1.1;
+            margin-bottom: 30px;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .input-group input,
+        .input-group select {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 13px 16px;
+            font-family: 'Space Mono', monospace;
+            font-size: 12px;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.25s, background 0.25s;
+            width: 100%;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            border-color: var(--sage);
+            background: #fff;
+        }
+
+        .input-group input::placeholder {
+            color: rgba(13,13,13,0.25);
+        }
+
+        .submit-btn {
+            margin-top: 10px;
+            background: var(--sage);
+            color: var(--cream);
+            border: none;
+            border-radius: 4px;
+            padding: 16px;
+            width: 100%;
+            font-family: 'Space Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gold);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s ease;
+            z-index: 0;
+        }
+
+        .submit-btn:hover::after {
+            transform: scaleX(1);
+        }
+
+        .submit-btn span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .submit-btn:hover {
+            color: var(--ink);
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        .submit-btn:disabled,
+        .submit-btn.disabled {
+            background: #c0bdb8;
+            color: rgba(255,255,255,0.5);
+            cursor: not-allowed;
+            transform: none;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        .submit-btn:disabled::after,
+        .submit-btn.disabled::after {
+            display: none;
+        }
+
+        .submit-btn.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .form-divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 28px 0 0;
+        }
+
+        .form-divider hr {
+            flex: 1;
+            border: none;
+            border-top: 1px solid var(--border);
+        }
+
+        .form-divider span {
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        .switch-link {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .switch-link:hover {
+            color: var(--sage);
+        }
+
+        .pw-requirements {
+            margin-top: 10px;
+            background: rgba(13,13,13,0.04);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 12px 14px;
+            display: none;
+        }
+
+        .pw-requirements.visible {
+            display: block;
+            animation: fadeSlideIn 0.2s ease both;
+        }
+
+        .pw-req-title {
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .pw-requirements ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .req {
+            font-size: 11px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.25s;
+        }
+
+        .req-icon {
+            font-size: 13px;
+            line-height: 1;
+            transition: all 0.25s;
+            flex-shrink: 0;
+        }
+
+        .req.passed { color: #2d6a4f; }
+        .req.passed .req-icon { color: #2d6a4f; }
+        .req.failed { color: #b5312c; }
+        .req.failed .req-icon { color: #b5312c; }
+
+        .pw-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .pw-wrap input {
+            padding-right: 42px;
+        }
+
+        .eye-btn {
+            position: absolute;
+            right: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            color: var(--muted);
+            transition: color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .eye-btn:hover { color: var(--sage); }
+
+        .eye-btn svg {
+            width: 16px;
+            height: 16px;
+            pointer-events: none;
+        }
+
+        .confirm-hint {
+            font-size: 10px;
+            letter-spacing: 0.5px;
+            margin-top: 5px;
+            min-height: 14px;
+            transition: color 0.25s;
+        }
+
+        .confirm-hint.match { color: #2d6a4f; }
+        .confirm-hint.no-match { color: #b5312c; }
+
+        .form-msg {
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            padding: 10px 14px;
+            border-radius: 4px;
+            margin-bottom: 14px;
+            display: none;
+        }
+
+        .form-msg.error {
+            display: block;
+            background: rgba(181,49,44,0.08);
+            border: 1px solid rgba(181,49,44,0.25);
+            color: #b5312c;
+        }
+
+        .form-msg.success {
+            display: block;
+            background: rgba(45,106,79,0.08);
+            border: 1px solid rgba(45,106,79,0.25);
+            color: #2d6a4f;
+        }
+
+        .code-input-wrap {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .code-digit {
+            flex: 1;
+            text-align: center;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 16px 4px;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.25s, background 0.25s;
+            width: 100%;
+            caret-color: transparent;
+        }
+
+        .code-digit:focus {
+            border-color: var(--sage);
+            background: #fff;
+        }
+
+        .code-digit.filled {
+            border-color: var(--gold);
+            color: var(--sage);
+        }
+
+        .resend-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 6px;
+            margin-bottom: 6px;
+            gap: 10px;
+        }
+
+        .resend-hint,
+        .timer-text {
+            font-size: 10px;
+            color: var(--muted);
+            letter-spacing: 0.5px;
+        }
+
+        .resend-btn {
+            background: none;
+            border: none;
+            font-family: 'Space Mono', monospace;
+            font-size: 10px;
+            color: var(--sage);
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-decoration: underline;
+            padding: 0;
+        }
+
+        .resend-btn:disabled {
+            color: var(--muted);
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        @media (max-width: 768px) {
+            .page {
+                padding: 24px 14px;
+                align-items: flex-start;
+            }
+
+            .form-shell {
+                padding: 26px 18px;
+                border-radius: 16px;
+            }
+
+            .form-title {
+                margin-bottom: 24px;
+            }
+
+            .input-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .code-digit {
+                font-size: 20px;
+                padding: 12px 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <div class="form-shell">
+        <div class="form-wrapper">
+
+            <div class="form-panel active" id="loginPanel">
+                <p class="form-eyebrow">Welcome back</p>
+                <h1 class="form-title">Sign In</h1>
+                <form autocomplete="off" method="post">
+                    {% csrf_token %}
+                    <div class="form-msg" id="loginMsg"></div>
+                    <div class="input-group">
+                        <label for="li-username">Username</label>
+                        <input type="text" id="li-username" name="username" autocomplete="new-password" placeholder="your_username">
+                    </div>
+                    <div class="input-group">
+                        <label for="li-password">Password</label>
+                        <div class="pw-wrap">
+                            <input type="password" id="li-password" autocomplete="new-password" name="password" placeholder="••••••••">
+                            <button type="button" class="eye-btn" onclick="toggleEye('li-password', this)" tabindex="-1">
+                                <svg id="li-password-eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="hidden" name="type" value="login">
+                    <button type="submit" class="submit-btn"><span>Sign In →</span></button>
+                </form>
+                <div class="form-divider">
+                    <hr>
+                    <span class="switch-link" onclick="switchPanel('register')">no account yet? <u>Sign up</u></span>
+                    <hr>
+                </div>
+            </div>
+
+            <div class="form-panel" id="registerPanel">
+                <p class="form-eyebrow">Join us today</p>
+                <h1 class="form-title">Create Account</h1>
+
+                <div class="form-msg" id="registerMsg"></div>
+
+                <div class="input-group">
+                    <label for="ru-username">Username</label>
+                    <input type="text" id="ru-username" autocomplete="new-password" placeholder="your_username" oninput="checkPassword(document.getElementById('ru-pw1'))">
+                </div>
+                <div class="input-row">
+                    <div class="input-group">
+                        <label for="ru-fname">First Name</label>
+                        <input type="text" id="ru-fname" placeholder="First">
+                    </div>
+                    <div class="input-group">
+                        <label for="ru-lname">Last Name</label>
+                        <input type="text" id="ru-lname" placeholder="Last">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="ru-email">Email</label>
+                    <input type="email" id="ru-email" placeholder="you@example.com" oninput="checkPassword(document.getElementById('ru-pw1'))">
+                </div>
+                <div class="input-group">
+                    <label for="ru-country">Role</label>
+                    <select id="ru-country" oninput="updateSendCodeBtn()">
+                        <option value="">Select your role</option>
+                        <option value="carrier">Carrier — I transport loads</option>
+                        <option value="shipper">Shipper — I publish loads</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label for="ru-pw1">Password</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="ru-pw1" autocomplete="new-password" placeholder="••••••••" oninput="checkPassword(this)">
+                        <button type="button" class="eye-btn" onclick="toggleEye('ru-pw1', this)" tabindex="-1">
+                            <svg id="ru-pw1-eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="pw-requirements" id="pwRequirements">
+                        <p class="pw-req-title">Password requirements:</p>
+                        <ul>
+                            <li class="req" id="req-length"><span class="req-icon">○</span> At least 8 characters</li>
+                            <li class="req" id="req-numeric"><span class="req-icon">○</span> Not entirely numeric</li>
+                            <li class="req" id="req-common"><span class="req-icon">○</span> Not a commonly used password</li>
+                            <li class="req" id="req-similar"><span class="req-icon">○</span> Not too similar to username or email</li>
+                            <li class="req" id="req-upper"><span class="req-icon">○</span> At least one uppercase letter</li>
+                            <li class="req" id="req-special"><span class="req-icon">○</span> At least one special character</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label for="ru-pw2">Confirm Password</label>
+                    <div class="pw-wrap">
+                        <input type="password" id="ru-pw2" placeholder="••••••••" oninput="checkConfirm(this)">
+                        <button type="button" class="eye-btn" onclick="toggleEye('ru-pw2', this)" tabindex="-1">
+                            <svg id="ru-pw2-eye" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="confirm-hint" id="confirmHint"></p>
+                </div>
+
+                <button type="button" class="submit-btn disabled" id="sendCodeBtn" disabled onclick="sendCode()">
+                    <span>Send Code →</span>
+                </button>
+
+                <div class="form-divider">
+                    <hr>
+                    <span class="switch-link" onclick="switchPanel('login')">already have an account? <u>Sign in</u></span>
+                    <hr>
+                </div>
+            </div>
+
+            <div class="form-panel" id="verifyPanel">
+                <p class="form-eyebrow">Almost there</p>
+                <h1 class="form-title">Verify Email</h1>
+
+                <div class="form-msg success" id="verifyInfoMsg">
+                    A 6-digit code was sent to <strong id="verifyEmailDisplay"></strong>
+                </div>
+                <div class="form-msg" id="verifyMsg"></div>
+
+                <div class="input-group">
+                    <label>Enter the 6-digit code</label>
+                    <div class="code-input-wrap" id="codeInputWrap">
+                        <input class="code-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                        <input class="code-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                        <input class="code-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                        <input class="code-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                        <input class="code-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                        <input class="code-digit" maxlength="1" type="text" inputmode="numeric" pattern="[0-9]">
+                    </div>
+                </div>
+
+                <div class="resend-row">
+                    <span class="resend-hint">Didn't receive it?</span>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span class="timer-text" id="timerText"></span>
+                        <button class="resend-btn" id="resendBtn" onclick="resendCode()" disabled>Resend</button>
+                    </div>
+                </div>
+
+                <button type="button" class="submit-btn disabled" id="verifyBtn" disabled onclick="verifyCode()">
+                    <span>Verify →</span>
+                </button>
+
+                <div class="form-divider">
+                    <hr>
+                    <span class="switch-link" onclick="switchPanel('register')">← Back to Sign Up</span>
+                    <hr>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let current = 'login';
+    let pendingEmail = '';
+    let timerInterval = null;
+
+    function switchPanel(target) {
+        if (target === current) return;
+        current = target;
+
+        document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById(target + 'Panel').classList.add('active');
+    }
+
+    function getCsrf() {
+        const el = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
+        return el ? el.split('=')[1] : '';
+    }
+
+    function showMsg(elId, type, text) {
+        const el = document.getElementById(elId);
+        el.className = 'form-msg ' + type;
+        el.textContent = text;
+    }
+
+    function hideMsg(elId) {
+        const el = document.getElementById(elId);
+        el.className = 'form-msg';
+        el.textContent = '';
+    }
+
+    async function sendCode() {
+        const username = document.getElementById('ru-username').value.trim();
+        const first_name = document.getElementById('ru-fname').value.trim();
+        const last_name = document.getElementById('ru-lname').value.trim();
+        const country = document.getElementById('ru-country').value.trim();
+        const email = document.getElementById('ru-email').value.trim();
+        const password = document.getElementById('ru-pw1').value;
+
+        if (!username || !email || !password) {
+            showMsg('registerMsg', 'error', 'Please fill in all required fields.');
+            return;
+        }
+
+        const btn = document.getElementById('sendCodeBtn');
+        btn.classList.add('loading');
+        btn.querySelector('span').textContent = 'Sending…';
+        hideMsg('registerMsg');
+
+        try {
+            const res = await fetch('/send_code/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrf(),
+                },
+                body: JSON.stringify({ username, first_name, last_name, email, password, country, role: country }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                pendingEmail = email;
+                document.getElementById('verifyEmailDisplay').textContent = email;
+                switchPanel('verify');
+                startTimer(120);
+                initCodeInputs();
+            } else {
+                showMsg('registerMsg', 'error', data.error || 'Something went wrong. Try again.');
+            }
+        } catch (err) {
+            showMsg('registerMsg', 'error', 'Network error. Please try again.');
+        } finally {
+            btn.classList.remove('loading');
+            btn.querySelector('span').textContent = 'Send Code →';
+        }
+    }
+
+    async function verifyCode() {
+        const digits = document.querySelectorAll('.code-digit');
+        const code = Array.from(digits).map(d => d.value).join('');
+
+        if (code.length !== 6) {
+            showMsg('verifyMsg', 'error', 'Please enter the full 6-digit code.');
+            return;
+        }
+
+        const btn = document.getElementById('verifyBtn');
+        btn.classList.add('loading');
+        btn.querySelector('span').textContent = 'Verifying…';
+        hideMsg('verifyMsg');
+
+        try {
+            const res = await fetch('/verify_email/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrf(),
+                },
+                body: JSON.stringify({ email: pendingEmail, code }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                btn.querySelector('span').textContent = '✓ Success!';
+                window.location.href = data.redirect || '/';
+            } else {
+                showMsg('verifyMsg', 'error', data.error || 'Invalid code. Please try again.');
+                document.getElementById('codeInputWrap').style.animation = 'none';
+                setTimeout(() => {
+                    document.getElementById('codeInputWrap').style.animation = '';
+                }, 10);
+            }
+        } catch (err) {
+            showMsg('verifyMsg', 'error', 'Network error. Please try again.');
+        } finally {
+            btn.classList.remove('loading');
+            if (btn.querySelector('span').textContent !== '✓ Success!') {
+                btn.querySelector('span').textContent = 'Verify →';
+            }
+        }
+    }
+
+    async function resendCode() {
+        const resendBtn = document.getElementById('resendBtn');
+        resendBtn.disabled = true;
+        hideMsg('verifyMsg');
+
+        const username = document.getElementById('ru-username').value.trim();
+        const first_name = document.getElementById('ru-fname').value.trim();
+        const last_name = document.getElementById('ru-lname').value.trim();
+        const country = document.getElementById('ru-country').value.trim();
+        const email = pendingEmail;
+        const password = document.getElementById('ru-pw1').value;
+
+        try {
+            const res = await fetch('/send_code/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCsrf(),
+                },
+                body: JSON.stringify({ username, first_name, last_name, email, password, country, role: country }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                showMsg('verifyMsg', 'success', 'New code sent!');
+                startTimer(120);
+                document.querySelectorAll('.code-digit').forEach(d => {
+                    d.value = '';
+                    d.classList.remove('filled');
+                });
+                document.querySelectorAll('.code-digit')[0].focus();
+                updateVerifyBtn();
+            } else {
+                showMsg('verifyMsg', 'error', data.error || 'Could not resend. Try again.');
+                resendBtn.disabled = false;
+            }
+        } catch (err) {
+            showMsg('verifyMsg', 'error', 'Network error.');
+            resendBtn.disabled = false;
+        }
+    }
+
+    function startTimer(seconds) {
+        clearInterval(timerInterval);
+        const timerEl = document.getElementById('timerText');
+        const resendBtn = document.getElementById('resendBtn');
+        resendBtn.disabled = true;
+
+        let remaining = seconds;
+
+        function tick() {
+            const m = Math.floor(remaining / 60);
+            const s = remaining % 60;
+            timerEl.textContent = m + ':' + String(s).padStart(2, '0');
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                timerEl.textContent = '';
+                resendBtn.disabled = false;
+            }
+            remaining--;
+        }
+
+        tick();
+        timerInterval = setInterval(tick, 1000);
+    }
+
+    function initCodeInputs() {
+        const digits = document.querySelectorAll('.code-digit');
+
+        digits.forEach((input, i) => {
+            input.value = '';
+            input.classList.remove('filled');
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace') {
+                    if (this.value === '' && i > 0) {
+                        digits[i - 1].focus();
+                        digits[i - 1].value = '';
+                        digits[i - 1].classList.remove('filled');
+                        updateVerifyBtn();
+                    }
+                }
+            });
+
+            input.addEventListener('input', function() {
+                const val = this.value.replace(/\D/g, '').slice(-1);
+                this.value = val;
+
+                if (val) {
+                    this.classList.add('filled');
+                    if (i < digits.length - 1) digits[i + 1].focus();
+                } else {
+                    this.classList.remove('filled');
+                }
+                updateVerifyBtn();
+            });
+
+            input.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const pasted = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '');
+                pasted.split('').forEach((ch, j) => {
+                    if (i + j < digits.length) {
+                        digits[i + j].value = ch;
+                        digits[i + j].classList.add('filled');
+                    }
+                });
+                const next = Math.min(i + pasted.length, digits.length - 1);
+                digits[next].focus();
+                updateVerifyBtn();
+            });
+        });
+
+        digits[0].focus();
+    }
+
+    function updateVerifyBtn() {
+        const digits = document.querySelectorAll('.code-digit');
+        const full = Array.from(digits).every(d => d.value.length === 1);
+        const btn = document.getElementById('verifyBtn');
+        btn.disabled = !full;
+        btn.classList.toggle('disabled', !full);
+    }
+
+    const commonPasswords = [
+        'password','password1','12345678','123456789','qwerty123','iloveyou',
+        'admin123','letmein','welcome1','monkey','dragon','master','sunshine',
+        'princess','football','abc12345','pass1234','superman','batman','qwerty',
+        'passw0rd','welcome','trustno1','shadow','password!','hello123'
+    ];
+
+    function setReq(el, passed) {
+        el.classList.remove('passed', 'failed');
+        el.querySelector('.req-icon').textContent = passed ? '●' : '○';
+        if (passed) el.classList.add('passed');
+        else el.classList.add('failed');
+    }
+
+    function checkPassword(input) {
+        const val = input.value;
+        const username = (document.getElementById('ru-username').value || '').toLowerCase();
+        const email = (document.getElementById('ru-email').value || '').toLowerCase();
+        const pwReqBox = document.getElementById('pwRequirements');
+
+        if (val.length > 0) pwReqBox.classList.add('visible');
+        else pwReqBox.classList.remove('visible');
+
+        setReq(document.getElementById('req-length'), val.length >= 8);
+        setReq(document.getElementById('req-numeric'), val.length > 0 && !/^\d+$/.test(val));
+        setReq(document.getElementById('req-common'), !commonPasswords.includes(val.toLowerCase()));
+
+        const lval = val.toLowerCase();
+        const emailPrefix = email.split('@')[0];
+        const notSimilar =
+            val.length > 0 &&
+            (username.length < 3 || (!lval.includes(username) && !username.includes(lval))) &&
+            (emailPrefix.length < 3 || !lval.includes(emailPrefix));
+
+        setReq(document.getElementById('req-similar'), notSimilar);
+        setReq(document.getElementById('req-upper'), /[A-Z]/.test(val));
+        setReq(document.getElementById('req-special'), /[^a-zA-Z0-9]/.test(val));
+
+        const pw2 = document.getElementById('ru-pw2');
+        if (pw2 && pw2.value.length > 0) checkConfirm(pw2);
+
+        updateSendCodeBtn();
+    }
+
+    function checkConfirm(input) {
+        const hint = document.getElementById('confirmHint');
+        const pw1 = (document.getElementById('ru-pw1') || {}).value || '';
+
+        if (input.value.length === 0) {
+            hint.textContent = '';
+            hint.className = 'confirm-hint';
+            return;
+        }
+
+        if (input.value === pw1) {
+            hint.textContent = '● Passwords match';
+            hint.className = 'confirm-hint match';
+        } else {
+            hint.textContent = '○ Passwords do not match';
+            hint.className = 'confirm-hint no-match';
+        }
+
+        updateSendCodeBtn();
+    }
+
+    function updateSendCodeBtn() {
+        const allPassed = ['req-length','req-numeric','req-common','req-similar','req-upper','req-special']
+            .every(id => document.getElementById(id).classList.contains('passed'));
+
+        const pw1val = (document.getElementById('ru-pw1') || {}).value || '';
+        const pw2val = (document.getElementById('ru-pw2') || {}).value || '';
+        const confirmed = pw1val.length > 0 && pw1val === pw2val;
+
+        const emailVal = document.getElementById('ru-email').value.trim();
+        const userVal = document.getElementById('ru-username').value.trim();
+        const countryVal = document.getElementById('ru-country').value.trim();
+
+        const btn = document.getElementById('sendCodeBtn');
+        const ok = allPassed && confirmed && emailVal.length > 0 && userVal.length > 0 && countryVal.length > 0;
+
+        btn.disabled = !ok;
+        btn.classList.toggle('disabled', !ok);
+    }
+
+    const eyeOpen = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+    const eyeClosed = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>`;
+
+    function toggleEye(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const svg = btn.querySelector('svg');
+        const hidden = input.type === 'password';
+        input.type = hidden ? 'text' : 'password';
+        svg.innerHTML = hidden ? eyeClosed : eyeOpen;
+        btn.style.color = hidden ? 'var(--sage)' : '';
+    }
+</script>
+</body>
+</html>

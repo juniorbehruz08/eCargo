@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title|default:"Load Detail" }}</title>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #161923;
+      --surface2: #1e2535;
+      --border: #2a3347;
+      --accent: #4a7cf7;
+      --accent-dim: #1a2a5a;
+      --text: #e2e8f0;
+      --text-dim: #8896b0;
+      --text-muted: #4a5568;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+      --red: #ef4444; --red-bg: #1a0808; --red-border: #7f1d1d;
+      --yellow: #eab308; --yellow-bg: #1a1400; --yellow-border: #713f12;
+      --green: #22c55e; --green-bg: #071a0e; --green-border: #14532d;
+      --gray: #6b7280; --gray-bg: #111318; --gray-border: #374151;
+      --white-load: #94a3b8; --white-bg: #161923; --white-border: #2a3347;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .topbar h1 {
+      font-family: var(--mono);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .topbar-sep { flex: 1; }
+
+    .btn-back {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 8px 14px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-family: var(--mono);
+      font-size: 12px;
+      transition: 0.15s;
+    }
+
+    .btn-back:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: linear-gradient(180deg, var(--surface), var(--surface2));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .load-id {
+      font-family: var(--mono);
+      color: var(--text-muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .route-title {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.2;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .route-meta {
+      margin-top: 10px;
+      color: var(--text-dim);
+      font-size: 14px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-pill.red    { background: var(--red-bg);    color: var(--red);        border: 1px solid var(--red-border); }
+    .status-pill.yellow { background: var(--yellow-bg); color: var(--yellow);     border: 1px solid var(--yellow-border); }
+    .status-pill.green  { background: var(--green-bg);  color: var(--green);      border: 1px solid var(--green-border); }
+    .status-pill.gray   { background: var(--gray-bg);   color: var(--gray);       border: 1px solid var(--gray-border); }
+    .status-pill.white  { background: var(--white-bg);  color: var(--white-load); border: 1px solid var(--white-border); }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .btn {
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid;
+      font-family: var(--mono);
+      font-size: 12px;
+      cursor: pointer;
+      transition: 0.15s;
+      background: transparent;
+    }
+
+    .btn-primary {
+      color: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-dim);
+    }
+
+    .btn-danger {
+      color: var(--red);
+      border-color: var(--red-border);
+      background: var(--red-bg);
+    }
+
+    .btn-success {
+      color: var(--green);
+      border-color: var(--green-border);
+      background: var(--green-bg);
+    }
+
+    .btn-warning {
+      color: var(--yellow);
+      border-color: var(--yellow-border);
+      background: var(--yellow-bg);
+      cursor: default;
+    }
+
+    .btn-muted {
+      color: var(--gray);
+      border-color: var(--gray-border);
+      background: var(--gray-bg);
+      cursor: default;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+
+    .card h3 {
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .info-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .info-item {
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .info-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .label {
+      color: var(--text-muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .value {
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+
+    .desc {
+      white-space: pre-wrap;
+      line-height: 1.7;
+      color: var(--text-dim);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: .2s;
+      z-index: 500;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal {
+      width: 420px;
+      max-width: 95vw;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 22px;
+    }
+
+    .modal h3 {
+      font-family: var(--mono);
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+
+    .modal textarea {
+      width: 100%;
+      min-height: 100px;
+      resize: vertical;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px;
+      border-radius: 6px;
+      outline: none;
+      font-family: var(--sans);
+    }
+
+    .modal textarea:focus {
+      border-color: var(--accent);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .toast {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 12px 18px;
+      border-radius: 6px;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all .2s;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      border-color: var(--green);
+      color: var(--green);
+    }
+
+    .toast.error {
+      border-color: var(--red);
+      color: var(--red);
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      .route-title { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <h1>{{ title|default:"Load Detail" }}</h1>
+    <div class="topbar-sep"></div>
+    <a href="{% url 'load_list' %}" class="btn-back">← Back to loads</a>
+  </div>
+
+  <div class="page">
+    <div class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="load-id">Load #{{ load.pk }}</div>
+
+          <div class="route-title">
+            {{ pickup.city|default:"—" }}, {{ pickup.country|default:"—" }}
+            <span style="color: var(--text-muted);">→</span>
+            {{ delivery.city|default:"—" }}, {{ delivery.country|default:"—" }}
+          </div>
+
+          <div class="route-meta">
+            Published by:
+            {% if load.created_by %}
+              {{ load.created_by.get_full_name|default:load.created_by.username }}
+            {% else %}
+              —
+            {% endif %}
+            • {{ load.created_at|date:"d.m.Y H:i" }}
+          </div>
+
+          <div class="action-row">
+            <span class="status-pill {{ load.color_status }}">
+              {% if load.color_status == 'red' %}🔴{% elif load.color_status == 'yellow' %}🟡{% elif load.color_status == 'green' %}🟢{% elif load.color_status == 'gray' %}⛔{% else %}⚪{% endif %}
+              {{ load.color_label }}
+            </span>
+
+            {% if is_owner %}
+              <button class="btn btn-danger" onclick="deleteLoad()">Delete load</button>
+            {% else %}
+              {% if role == 'carrier' %}
+                {% if interest_status == 'pending' %}
+                  <button class="btn btn-warning" disabled>⏳ Interest sent</button>
+                {% elif interest_status == 'accepted' %}
+                  <button class="btn btn-success" onclick="openChat()">💬 Open chat</button>
+                {% elif interest_status == 'rejected' %}
+                  <button class="btn btn-muted" disabled>✗ Rejected</button>
+                {% else %}
+                  <button class="btn btn-primary" onclick="openInterestModal()">+ Express interest</button>
+                {% endif %}
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Route Information</h3>
+        <div class="info-list">
+          <div class="info-item">
+            <div class="label">Pickup</div>
+            <div class="value">
+              {{ pickup.country|default:"—" }}, {{ pickup.city|default:"—" }}
+              {% if pickup.postal_code %}({{ pickup.postal_code }}){% endif %}
+              <br>
+              {% if pickup.full_address %}{{ pickup.full_address }}<br>{% endif %}
+              {{ pickup.date_from|date:"d.m.Y H:i" }}
+              {% if pickup.date_to %} → {{ pickup.date_to|date:"d.m.Y H:i" }}{% endif %}
+            </div>
+          </div>
+
+          <div class="info-item">
+            <div class="label">Delivery</div>
+            <div class="value">
+              {{ delivery.country|default:"—" }}, {{ delivery.city|default:"—" }}
+              {% if delivery.postal_code %}({{ delivery.postal_code }}){% endif %}
+              <br>
+              {% if delivery.full_address %}{{ delivery.full_address }}<br>{% endif %}
+              {{ delivery.date_from|date:"d.m.Y H:i" }}
+              {% if delivery.date_to %} → {{ delivery.date_to|date:"d.m.Y H:i" }}{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Load Details</h3>
+        <div class="info-list">
+          <div class="info-item">
+            <div class="label">Load type</div>
+            <div class="value">{{ load.load_type|default:"—" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Price</div>
+            <div class="value">
+              {% if load.total_price %}
+                {{ load.total_price }} {{ load.currency }}
+              {% else %}
+                —
+              {% endif %}
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="label">Mileage</div>
+            <div class="value">{% if load.mileage %}{{ load.mileage }}{% else %}—{% endif %}</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Capacity</div>
+            <div class="value">{% if load.capacity %}{{ load.capacity }} t{% else %}—{% endif %}</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Vehicle size</div>
+            <div class="value">{{ load.vehicle_size|default:"—" }}</div>
+          </div>
+          <div class="info-item">
+            <div class="label">Body type</div>
+            <div class="value">{{ load.body_type|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="grid-column: 1 / -1;">
+        <h3>Description</h3>
+        <div class="desc">
+          {% if load.additional_description %}
+            {{ load.additional_description }}
+          {% else %}
+            No additional description.
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="interestModal">
+    <div class="modal">
+      <h3>Express Interest</h3>
+      <textarea id="interestMessage" placeholder="Write message to shipper (optional)" maxlength="500"></textarea>
+      <div style="text-align:right;color:var(--text-muted);font-size:10px;margin-top:4px;">
+        <span id="msgCount">0</span>/500
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-muted" type="button" onclick="closeInterestModal()">Cancel</button>
+        <button class="btn btn-primary" id="sendInterestBtn" type="button" onclick="submitInterest()">Send Interest</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const LOAD_ID = {{ load.pk }};
+    const CHAT_URL = "{{ chat_url|default:'' }}";
+
+    function getCookie(name) {
+      return document.cookie.split(';').map(c => c.trim())
+        .find(c => c.startsWith(name + '='))?.split('=')[1] || '';
+    }
+
+    function showToast(message, type='success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast show ${type}`;
+      setTimeout(() => {
+        toast.className = 'toast';
+      }, 3000);
+    }
+
+    function openInterestModal() {
+      document.getElementById('interestModal').classList.add('open');
+      document.getElementById('interestMessage').focus();
+    }
+
+    function closeInterestModal() {
+      document.getElementById('interestModal').classList.remove('open');
+      document.getElementById('interestMessage').value = '';
+      document.getElementById('msgCount').textContent = '0';
+    }
+
+    document.getElementById('interestModal').addEventListener('click', function(e) {
+      if (e.target === this) closeInterestModal();
+    });
+
+    document.getElementById('interestMessage').addEventListener('input', function() {
+      document.getElementById('msgCount').textContent = this.value.length;
+    });
+
+    async function submitInterest() {
+      const btn = document.getElementById('sendInterestBtn');
+      const message = document.getElementById('interestMessage').value.trim();
+
+      btn.disabled = true;
+      btn.textContent = 'Sending...';
+
+      try {
+        const res = await fetch(`/interest/${LOAD_ID}/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ message: message })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          showToast('Interest sent successfully.', 'success');
+          closeInterestModal();
+          setTimeout(() => window.location.reload(), 700);
+        } else {
+          showToast(data.error || 'Error sending interest.', 'error');
+        }
+      } catch (err) {
+        showToast('Network error.', 'error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Send Interest';
+    }
+
+    async function deleteLoad() {
+      if (!confirm('Are you sure you want to delete this load?')) return;
+
+      try {
+        const res = await fetch(`/${LOAD_ID}/delete/`, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+          }
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          showToast('Load deleted.', 'success');
+          setTimeout(() => {
+            window.location.href = "{% url 'load_list' %}";
+          }, 700);
+        } else {
+          showToast(data.error || 'Delete failed.', 'error');
+        }
+      } catch (err) {
+        showToast('Network error.', 'error');
+      }
+    }
+
+    function openChat() {
+      if (CHAT_URL) {
+        window.location.href = CHAT_URL;
+      }
+    }
+  </script>
+</body>
+</html>

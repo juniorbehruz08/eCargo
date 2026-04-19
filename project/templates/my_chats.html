@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title|default:"My Chats" }}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14; --surface: #161923; --surface2: #1e2535;
+    --border: #2a3347; --accent: #4a7cf7; --accent-dim: #1a2a5a;
+    --text: #e2e8f0; --text-dim: #8896b0; --text-muted: #4a5568;
+    --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif;
+    --green: #22c55e; --green-bg: #071a0e; --green-border: #14532d;
+    --radius: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; min-height: 100vh; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 24px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar h1 { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .topbar-sep { flex: 1; }
+  .btn-back {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); padding: 7px 14px; border-radius: var(--radius);
+    font-size: 12px; cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;
+  }
+  .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+  .content { max-width: 700px; margin: 0 auto; padding: 24px; }
+
+  .chat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 12px; cursor: pointer;
+    transition: border-color 0.15s; text-decoration: none; display: block;
+    padding: 16px 20px;
+  }
+  .chat-card:hover { border-color: var(--accent); background: var(--surface2); }
+  .chat-card.has-unread { border-left: 3px solid var(--accent); }
+
+  .chat-card-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .chat-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--accent-dim); border: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--accent);
+    flex-shrink: 0;
+  }
+  .chat-card-info { flex: 1; min-width: 0; }
+  .chat-other-name { font-weight: 600; font-size: 14px; color: var(--text); }
+  .chat-load-ref { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+  .unread-badge {
+    background: var(--accent); color: #fff;
+    border-radius: 50%; min-width: 20px; height: 20px;
+    font-size: 10px; font-family: var(--mono); font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px; flex-shrink: 0;
+  }
+
+  .chat-route {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--text-dim); margin-bottom: 6px;
+  }
+  .chat-route .country { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+  .chat-route .city { font-weight: 500; color: var(--text); }
+  .chat-route .arrow { color: var(--text-muted); }
+
+  .last-msg {
+    font-size: 12px; color: var(--text-dim);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    padding-top: 6px; border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  }
+  .last-msg .time { font-family: var(--mono); font-size: 10px; color: var(--text-muted); flex-shrink: 0; }
+
+  .empty-page { text-align: center; padding: 80px 24px; color: var(--text-muted); }
+  .empty-page .icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-page h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>💬 My Chats</h1>
+  <div class="topbar-sep"></div>
+  <a href="{% url 'load_list' %}" class="btn-back">← Back to Loads</a>
+</div>
+
+<div class="content">
+  {% if rooms_data %}
+    {% for item in rooms_data %}
+    <a href="{% url 'chat_view' item.room.pk %}" class="chat-card {% if item.unread_count %}has-unread{% endif %}">
+      <div class="chat-card-top">
+        <div class="chat-avatar">
+          {{ item.other_user.first_name|first|upper }}{{ item.other_user.last_name|first|upper }}
+        </div>
+        <div class="chat-card-info">
+          <div class="chat-other-name">{{ item.other_user.get_full_name|default:item.other_user.username }}</div>
+          <div class="chat-load-ref">Load #{{ item.load.pk }} · {{ item.load.load_type }}</div>
+        </div>
+        {% if item.unread_count %}
+        <div class="unread-badge">{{ item.unread_count }}</div>
+        {% endif %}
+      </div>
+
+      {% if item.pickup and item.delivery %}
+      <div class="chat-route">
+        <span class="country">{{ item.pickup.country }}</span>
+        <span class="city">{{ item.pickup.city }}</span>
+        <span class="arrow">→</span>
+        <span class="country">{{ item.delivery.country }}</span>
+        <span class="city">{{ item.delivery.city }}</span>
+      </div>
+      {% endif %}
+
+      <div class="last-msg">
+        <span>
+          {% if item.last_message %}
+            {{ item.last_message.text|truncatechars:60 }}
+          {% else %}
+            No messages yet
+          {% endif %}
+        </span>
+        <span class="time">
+          {% if item.last_message %}
+            {{ item.last_message.created_at|date:"d.m H:i" }}
+          {% endif %}
+        </span>
+      </div>
+    </a>
+    {% endfor %}
+  {% else %}
+  <div class="empty-page">
+    <div class="icon">💬</div>
+    <h3>No chats yet</h3>
+    <p>Chats open when a shipper accepts your interest in a load.</p>
+  </div>
+  {% endif %}
+</div>
+
+</body>
+</html>

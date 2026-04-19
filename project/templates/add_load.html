@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Freight</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161923;
+    --surface2: #1e2535;
+    --border: #2a3347;
+    --border-active: #3d5a8a;
+    --accent: #4a7cf7;
+    --accent-dim: #2a4a8a;
+    --text: #e2e8f0;
+    --text-dim: #8896b0;
+    --text-muted: #4a5568;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --radius: 6px;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    min-height: 100vh;
+  }
+
+  .main-panel { border-right: 1px solid var(--border); }
+  .side-panel { background: var(--surface); padding: 24px 20px; }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .page-header h1 {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+
+  .header-sep { flex: 1; }
+
+  .btn-template {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-template:hover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .locations-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .location-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+
+  .location-card.pickup { border-left: 3px solid var(--accent); }
+  .location-card.delivery { border-left: 3px solid var(--green); }
+
+  .location-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .loc-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  .loc-badge.pickup { background: var(--accent-dim); color: var(--accent); }
+  .loc-badge.delivery { background: #14532d; color: var(--green); }
+
+  .loc-grid {
+    display: grid;
+    grid-template-columns: 120px 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .loc-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+
+  .loc-date-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 80px;
+    gap: 8px;
+    align-items: end;
+  }
+
+  .route-connector {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-family: var(--mono);
+  }
+
+  .route-connector::before,
+  .route-connector::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .field label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .field label .req {
+    color: var(--red);
+    margin-left: 2px;
+  }
+
+  input[type=text],
+  input[type=number],
+  input[type=datetime-local],
+  select,
+  textarea {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: var(--radius);
+    font-family: var(--sans);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--accent);
+    background: var(--surface2);
+  }
+
+  select option { background: var(--surface); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  input[type=datetime-local]::-webkit-calendar-picker-indicator {
+    filter: invert(0.4);
+    cursor: pointer;
+  }
+
+  .req-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .req-grid-4 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .checkbox-group {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-dim);
+    user-select: none;
+  }
+
+  .checkbox-label input[type=checkbox] {
+    width: 14px;
+    height: 14px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .radio-toggle {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .radio-toggle label {
+    flex: 1;
+    text-align: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-dim);
+    transition: all 0.15s;
+    background: var(--bg);
+    border: none;
+    font-family: var(--mono);
+  }
+
+  .radio-toggle input[type=radio] { display: none; }
+
+  .radio-toggle input[type=radio]:checked + label {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  .side-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+
+  .pub-toggle {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .pub-toggle label {
+    flex: 1;
+    text-align: center;
+    padding: 9px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-dim);
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+
+  .pub-toggle input[type=radio] { display: none; }
+
+  .pub-toggle input[type=radio]:checked + label {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 500;
+  }
+
+  .safepay-notice {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .safepay-notice a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .messenger-toggle {
+    display: flex;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+
+  .messenger-toggle label {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 11px;
+    color: var(--text-dim);
+    background: var(--bg);
+    transition: all 0.15s;
+  }
+
+  .messenger-toggle input[type=radio] { display: none; }
+
+  .messenger-toggle input[type=radio]:checked + label {
+    background: var(--accent-dim);
+    color: var(--accent);
+  }
+
+  .price-row {
+    display: grid;
+    grid-template-columns: 1fr 80px;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .side-field { margin-bottom: 12px; }
+
+  .side-meta {
+    font-size: 11px;
+    color: var(--text-dim);
+    padding: 10px 0;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+
+  .side-meta-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .side-meta-row .label { color: var(--text-muted); }
+  .side-meta-row .val {
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 11px;
+    text-align: right;
+  }
+
+  .action-bar {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+  }
+
+  .btn-clear {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 8px;
+    text-decoration: underline;
+  }
+
+  .btn-save {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+
+  .btn-save:hover { border-color: var(--border-active); }
+
+  .btn-save .arrow {
+    font-size: 10px;
+    border: 1px solid var(--border);
+    padding: 2px 5px;
+    border-radius: 3px;
+  }
+
+  .btn-publish {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    padding: 9px 20px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+
+  .btn-publish:hover { background: #3a6ce7; }
+
+  .btn-publish:disabled {
+    background: var(--accent-dim);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 12px 18px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.2s;
+  }
+
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+
+  .form-scroll { overflow-y: auto; }
+
+  @media (max-width: 900px) {
+    .shell { grid-template-columns: 1fr; }
+    .main-panel { border-right: none; border-bottom: 1px solid var(--border); }
+    .req-grid, .req-grid-4 { grid-template-columns: 1fr 1fr; }
+    .loc-grid, .loc-grid-2 { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 640px) {
+    .req-grid, .req-grid-4, .loc-grid, .loc-grid-2, .loc-date-grid, .price-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <div class="main-panel">
+    <div class="page-header">
+      <h1>Create Freight</h1>
+      <div class="header-sep"></div>
+      <button class="btn-template" type="button">Select a template</button>
+    </div>
+
+    <div class="form-scroll">
+      <div class="section">
+        <div class="section-title">Route</div>
+
+        <div class="locations-wrapper">
+          <div class="location-card pickup">
+            <div class="location-header">
+              <span class="loc-badge pickup">Loading</span>
+            </div>
+
+            <div class="loc-grid">
+              <div class="field">
+                <label>Country<span class="req">*</span></label>
+                <input type="text" id="pickupCountry" placeholder="DE">
+              </div>
+              <div class="field">
+                <label>Post code</label>
+                <input type="text" id="pickupPostal" placeholder="66111">
+              </div>
+              <div class="field">
+                <label>City<span class="req">*</span></label>
+                <input type="text" id="pickupCity" placeholder="Saarbrücken">
+              </div>
+            </div>
+
+            <div class="loc-grid-2">
+              <div class="field">
+                <label>Full address</label>
+                <input type="text" id="pickupAddress" placeholder="Street, building, notes">
+              </div>
+              <div class="field">
+                <label>Date & Time<span class="req">*</span></label>
+                <input type="datetime-local" id="pickupDateFrom">
+              </div>
+            </div>
+
+            <div class="loc-date-grid">
+              <div class="field">
+                <label>Range end (optional)</label>
+                <input type="datetime-local" id="pickupDateTo">
+              </div>
+              <div></div>
+              <div>
+                <label class="field" style="gap:4px">
+                  <span style="font-size:10px;color:var(--text-muted)">RANGE</span>
+                </label>
+                <label class="checkbox-label" style="margin-top:8px">
+                  <input type="checkbox" id="pickupIsRange"> Range
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="route-connector">PICKUP → DELIVERY</div>
+
+          <div class="location-card delivery">
+            <div class="location-header">
+              <span class="loc-badge delivery">Unloading</span>
+            </div>
+
+            <div class="loc-grid">
+              <div class="field">
+                <label>Country<span class="req">*</span></label>
+                <input type="text" id="deliveryCountry" placeholder="PL">
+              </div>
+              <div class="field">
+                <label>Post code</label>
+                <input type="text" id="deliveryPostal" placeholder="00-001">
+              </div>
+              <div class="field">
+                <label>City<span class="req">*</span></label>
+                <input type="text" id="deliveryCity" placeholder="Warsaw">
+              </div>
+            </div>
+
+            <div class="loc-grid-2">
+              <div class="field">
+                <label>Full address</label>
+                <input type="text" id="deliveryAddress" placeholder="Street, building, notes">
+              </div>
+              <div class="field">
+                <label>Date & Time<span class="req">*</span></label>
+                <input type="datetime-local" id="deliveryDateFrom">
+              </div>
+            </div>
+
+            <div class="loc-date-grid">
+              <div class="field">
+                <label>Range end (optional)</label>
+                <input type="datetime-local" id="deliveryDateTo">
+              </div>
+              <div></div>
+              <div>
+                <label class="field" style="gap:4px">
+                  <span style="font-size:10px;color:var(--text-muted)">RANGE</span>
+                </label>
+                <label class="checkbox-label" style="margin-top:8px">
+                  <input type="checkbox" id="deliveryIsRange"> Range
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Vehicle Requirements</div>
+
+        <div class="req-grid">
+          <div class="field">
+            <label>Vehicle size</label>
+            <select id="vehicleSize">
+              <option value="">Any</option>
+              {% for val, label in vehicle_size_choices %}
+              <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Body type</label>
+            <select id="bodyType">
+              <option value="">Any</option>
+              {% for val, label in body_type_choices %}
+              <option value="{{ val }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Capacity (t)</label>
+            <input type="number" id="capacity" placeholder="e.g. 24" step="0.1" min="0">
+          </div>
+        </div>
+
+        <div class="req-grid-4">
+          <div class="field">
+            <label>Load meters (ldm)</label>
+            <input type="number" id="loadMeters" placeholder="e.g. 13.6" step="0.1" min="0">
+          </div>
+
+          <div>
+            <label class="field" style="gap:4px">
+              <span style="font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted)">Load type</span>
+            </label>
+            <div class="radio-toggle" style="margin-top:4px">
+              <input type="radio" name="loadType" id="ftl" value="FTL" checked>
+              <label for="ftl">FTL</label>
+              <input type="radio" name="loadType" id="ltl" value="LTL">
+              <label for="ltl">LTL</label>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Quantity</label>
+            <input type="number" id="quantity" placeholder="pallets/units" min="0">
+          </div>
+
+          <div class="field">
+            <label>Contacts</label>
+            <input type="text" id="contacts" value="{{ request.user.get_full_name }}" placeholder="Contact person">
+          </div>
+        </div>
+
+        <div class="checkbox-group">
+          <label class="checkbox-label"><input type="checkbox" id="stackable"> Stackable</label>
+          <label class="checkbox-label"><input type="checkbox" id="toExchange"> To exchange</label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Additional Description</div>
+        <textarea id="additionalDesc" placeholder="e.g. possibility of permanent cooperation - please contact me" maxlength="2000"></textarea>
+        <div style="text-align:right;color:var(--text-muted);font-size:10px;margin-top:4px">
+          <span id="descCount">0</span> / 2000
+        </div>
+      </div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn-clear" type="button" onclick="clearForm()">Clear form</button>
+
+      <div class="checkbox-row">
+        <label class="checkbox-label"><input type="checkbox" id="addAnother"> Add another freight</label>
+      </div>
+
+      <div style="flex:1"></div>
+
+      <button class="btn-save" type="button">
+        Save as template
+        <span class="arrow">▼</span>
+      </button>
+
+      <button class="btn-publish" id="publishBtn" type="button" onclick="publishLoad()">
+        Publish freight
+      </button>
+    </div>
+  </div>
+
+  <div class="side-panel">
+    <div class="side-title">Freight publication mode</div>
+
+    <div class="pub-toggle">
+      <input type="radio" name="pubMode" id="pubExchange" value="exchange">
+      <label for="pubExchange">Exchange</label>
+
+      <input type="radio" name="pubMode" id="pubSelected" value="selected" checked>
+      <label for="pubSelected">To selected</label>
+    </div>
+
+    <div class="safepay-notice">
+      <span>⚠</span>
+      <span>Your offers are not protected by SafePay. <a href="#">Turn on protection</a></span>
+    </div>
+
+    <div class="messenger-toggle">
+      <input type="radio" name="recipient" id="fromMsg" value="messenger" checked>
+      <label for="fromMsg">from messenger</label>
+
+      <input type="radio" name="recipient" id="fromContractors" value="contractors">
+      <label for="fromContractors">from the Contractors module</label>
+    </div>
+
+    <div class="side-title" style="margin-top:8px">Price</div>
+
+    <div class="price-row">
+      <input type="number" id="totalPrice" placeholder="—" step="0.01" min="0">
+      <select id="currency">
+        {% for val, label in currency_choices %}
+        <option value="{{ val }}" {% if val == 'USD' %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <label class="checkbox-label" style="margin-bottom:14px">
+      <input type="checkbox" id="buyNow"> "Buy now"
+    </label>
+
+    <div class="side-field">
+      <div class="field">
+        <label>Mileage</label>
+        <input type="number" id="mileage" placeholder="e.g. 540.5" step="0.1" min="0">
+      </div>
+    </div>
+
+    <div class="side-field">
+      <div class="field">
+        <label>Price per mile (auto)</label>
+        <input type="text" id="pricePerMile" placeholder="—" readonly style="background:var(--surface2);color:var(--green)">
+      </div>
+    </div>
+
+    <div class="side-meta">
+      <div class="side-meta-row">
+        <span class="label">Payment deadline (days)</span>
+        <span class="val" id="deadlinePreview">—</span>
+      </div>
+
+      <div class="side-field" style="width:100%; padding-top:8px;">
+        <div class="field">
+          <label>Payment deadline (days)</label>
+          <input type="number" id="paymentDeadlineDays" placeholder="30" min="0">
+        </div>
+      </div>
+
+      <div class="side-field" style="width:100%;">
+        <div class="field">
+          <label>Time to submit offers</label>
+          <input type="datetime-local" id="timeToSubmitOffers">
+        </div>
+      </div>
+    </div>
+
+    <label class="checkbox-label" style="margin-top:14px">
+      <input type="checkbox" id="schedulePub"> Schedule publication date:
+    </label>
+    <input type="datetime-local" id="scheduledDate" style="margin-top:8px;display:none">
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('additionalDesc').addEventListener('input', e => {
+    document.getElementById('descCount').textContent = e.target.value.length;
+  });
+
+  document.getElementById('schedulePub').addEventListener('change', e => {
+    document.getElementById('scheduledDate').style.display = e.target.checked ? 'block' : 'none';
+  });
+
+  document.getElementById('totalPrice').addEventListener('input', recalcPricePerMile);
+  document.getElementById('mileage').addEventListener('input', recalcPricePerMile);
+  document.getElementById('currency').addEventListener('change', recalcPricePerMile);
+  document.getElementById('paymentDeadlineDays').addEventListener('input', updateDeadlinePreview);
+});
+
+function recalcPricePerMile() {
+  const totalPrice = parseFloat(document.getElementById('totalPrice').value);
+  const mileage = parseFloat(document.getElementById('mileage').value);
+  const currency = document.getElementById('currency').value;
+
+  if (!isNaN(totalPrice) && !isNaN(mileage) && mileage > 0) {
+    const ppm = (totalPrice / mileage).toFixed(2);
+    document.getElementById('pricePerMile').value = `${ppm} ${currency}/mile`;
+  } else {
+    document.getElementById('pricePerMile').value = '';
+  }
+}
+
+function updateDeadlinePreview() {
+  const days = document.getElementById('paymentDeadlineDays').value;
+  document.getElementById('deadlinePreview').textContent = days ? `${days} days` : '—';
+}
+
+function collectPayload() {
+  const loadType = document.querySelector('input[name=loadType]:checked')?.value || 'FTL';
+  const pubMode = document.querySelector('input[name=pubMode]:checked')?.value || 'exchange';
+
+  return {
+    publication_mode: pubMode,
+    time_to_submit_offers: document.getElementById('timeToSubmitOffers').value || null,
+    contacts: document.getElementById('contacts').value.trim(),
+    buy_now: document.getElementById('buyNow').checked,
+    schedule_publication: document.getElementById('schedulePub').checked,
+    scheduled_publish_at: document.getElementById('scheduledDate').value || null,
+
+    total_price: document.getElementById('totalPrice').value || null,
+    currency: document.getElementById('currency').value,
+    mileage: document.getElementById('mileage').value || null,
+    payment_deadline_days: document.getElementById('paymentDeadlineDays').value || null,
+
+    vehicle_size: document.getElementById('vehicleSize').value,
+    body_type: document.getElementById('bodyType').value,
+    capacity: document.getElementById('capacity').value || null,
+    load_meters: document.getElementById('loadMeters').value || null,
+    load_type: loadType,
+    quantity: document.getElementById('quantity').value || null,
+    stackable: document.getElementById('stackable').checked,
+    to_exchange: document.getElementById('toExchange').checked,
+    additional_description: document.getElementById('additionalDesc').value,
+
+    locations: [
+      {
+        type: 'pickup',
+        country: document.getElementById('pickupCountry').value.trim(),
+        postal_code: document.getElementById('pickupPostal').value.trim(),
+        city: document.getElementById('pickupCity').value.trim(),
+        full_address: document.getElementById('pickupAddress').value.trim(),
+        date_from: document.getElementById('pickupDateFrom').value || null,
+        date_to: document.getElementById('pickupDateTo').value || null,
+        is_range: document.getElementById('pickupIsRange').checked
+      },
+      {
+        type: 'delivery',
+        country: document.getElementById('deliveryCountry').value.trim(),
+        postal_code: document.getElementById('deliveryPostal').value.trim(),
+        city: document.getElementById('deliveryCity').value.trim(),
+        full_address: document.getElementById('deliveryAddress').value.trim(),
+        date_from: document.getElementById('deliveryDateFrom').value || null,
+        date_to: document.getElementById('deliveryDateTo').value || null,
+        is_range: document.getElementById('deliveryIsRange').checked
+      }
+    ]
+  };
+}
+
+function validate(payload) {
+  if (!payload.locations[0].country) return 'Pickup country is required';
+  if (!payload.locations[0].city) return 'Pickup city is required';
+  if (!payload.locations[0].date_from) return 'Pickup date is required';
+
+  if (!payload.locations[1].country) return 'Delivery country is required';
+  if (!payload.locations[1].city) return 'Delivery city is required';
+  if (!payload.locations[1].date_from) return 'Delivery date is required';
+
+  if (payload.total_price !== null && Number(payload.total_price) < 0) return 'Total price cannot be negative';
+  if (payload.mileage !== null && Number(payload.mileage) < 0) return 'Mileage cannot be negative';
+  if (payload.payment_deadline_days !== null && Number(payload.payment_deadline_days) < 0) return 'Payment deadline cannot be negative';
+
+  return null;
+}
+
+async function publishLoad() {
+  const payload = collectPayload();
+  const err = validate(payload);
+
+  if (err) {
+    showToast(err, 'error');
+    return;
+  }
+
+  const btn = document.getElementById('publishBtn');
+  btn.disabled = true;
+  btn.textContent = 'Publishing…';
+
+  try {
+    const res = await fetch('/save/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCookie('csrftoken'),
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showToast('Freight published successfully!', 'success');
+
+      if (document.getElementById('addAnother').checked) {
+        setTimeout(() => {
+          clearForm();
+          btn.disabled = false;
+          btn.textContent = 'Publish freight';
+        }, 1200);
+      } else {
+        setTimeout(() => {
+          window.location.href = data.redirect || '';
+        }, 1200);
+      }
+    } else {
+      showToast(data.error || 'Error publishing', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Publish freight';
+    }
+  } catch (e) {
+    showToast('Network error', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Publish freight';
+  }
+}
+
+function clearForm() {
+  document.getElementById('pickupCountry').value = '';
+  document.getElementById('pickupPostal').value = '';
+  document.getElementById('pickupCity').value = '';
+  document.getElementById('pickupAddress').value = '';
+  document.getElementById('pickupDateFrom').value = '';
+  document.getElementById('pickupDateTo').value = '';
+  document.getElementById('pickupIsRange').checked = false;
+
+  document.getElementById('deliveryCountry').value = '';
+  document.getElementById('deliveryPostal').value = '';
+  document.getElementById('deliveryCity').value = '';
+  document.getElementById('deliveryAddress').value = '';
+  document.getElementById('deliveryDateFrom').value = '';
+  document.getElementById('deliveryDateTo').value = '';
+  document.getElementById('deliveryIsRange').checked = false;
+
+  document.getElementById('totalPrice').value = '';
+  document.getElementById('currency').value = 'USD';
+  document.getElementById('mileage').value = '';
+  document.getElementById('pricePerMile').value = '';
+  document.getElementById('paymentDeadlineDays').value = '';
+  document.getElementById('deadlinePreview').textContent = '—';
+  document.getElementById('timeToSubmitOffers').value = '';
+  document.getElementById('contacts').value = '{{ request.user.get_full_name }}';
+  document.getElementById('vehicleSize').value = '';
+  document.getElementById('bodyType').value = '';
+  document.getElementById('capacity').value = '';
+  document.getElementById('loadMeters').value = '';
+  document.getElementById('quantity').value = '';
+  document.getElementById('additionalDesc').value = '';
+  document.getElementById('descCount').textContent = '0';
+
+  document.getElementById('stackable').checked = false;
+  document.getElementById('toExchange').checked = false;
+  document.getElementById('buyNow').checked = false;
+  document.getElementById('schedulePub').checked = false;
+  document.getElementById('scheduledDate').value = '';
+  document.getElementById('scheduledDate').style.display = 'none';
+
+  document.getElementById('pubSelected').checked = true;
+  document.getElementById('ftl').checked = true;
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+function getCookie(name) {
+  return document.cookie.split(';').map(c => c.trim())
+    .find(c => c.startsWith(name + '='))?.split('=')[1] || '';
+}
+</script>
+</body>
+</html>

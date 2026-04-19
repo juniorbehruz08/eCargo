@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ carrier.get_full_name }} — FreightUZ</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --text: #e8e6f0;
+    --muted: #6b7080;
+    --accent: #7ee8a2;
+    --accent2: #5bc4f5;
+    --warn: #f5c842;
+    --danger: #f07070;
+    --platinum: #c8b8f8;
+    --gold: #f5c842;
+    --silver: #a0aec0;
+    --red-load: #f07070;
+    --yellow-load: #f5c842;
+    --green-load: #7ee8a2;
+    --white-load: #d0d0d0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Outfit', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 32px 24px 64px; }
+
+  /* ── TOP NAV ── */
+  .nav {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 40px; padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo { font-family: 'DM Serif Display', serif; font-size: 20px; letter-spacing: -0.5px; }
+  .nav-logo span { color: var(--accent); }
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+  .nav-pill {
+    font-size: 12px; font-weight: 500; padding: 6px 14px;
+    border: 1px solid var(--border2); border-radius: 20px;
+    color: var(--muted); cursor: pointer; text-decoration: none;
+    transition: all .2s; display: inline-block;
+  }
+  .nav-pill:hover { color: var(--text); border-color: rgba(255,255,255,0.25); }
+  .nav-back {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500; padding: 6px 14px;
+    border: 1px solid var(--border2); border-radius: 20px;
+    color: var(--muted); cursor: pointer; text-decoration: none;
+    transition: all .2s;
+  }
+  .nav-back:hover { color: var(--accent); border-color: rgba(126,232,162,0.4); }
+
+  /* ── HERO ── */
+  .hero {
+    display: grid; grid-template-columns: auto 1fr auto;
+    align-items: center; gap: 24px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 28px 32px; margin-bottom: 24px;
+    position: relative; overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute; top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(126,232,162,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .avatar {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, #2a3a2e 0%, #1a2820 100%);
+    border: 2px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--accent);
+  }
+  .hero-info h1 {
+    font-family: 'DM Serif Display', serif; font-size: 26px;
+    letter-spacing: -0.5px; margin-bottom: 4px;
+  }
+  .hero-meta { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .hero-tag {
+    font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 12px;
+    letter-spacing: .04em;
+  }
+  .tag-gold { background: rgba(245,200,66,0.15); color: var(--gold); border: 1px solid rgba(245,200,66,0.3); }
+  .tag-silver { background: rgba(160,174,192,0.15); color: var(--silver); border: 1px solid rgba(160,174,192,0.3); }
+  .tag-platinum { background: rgba(200,184,248,0.15); color: var(--platinum); border: 1px solid rgba(200,184,248,0.3); }
+  .tag-id { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+  .tag-city { background: rgba(91,196,245,0.1); color: var(--accent2); border: 1px solid rgba(91,196,245,0.2); }
+  .hero-score-box { text-align: center; }
+  .score-big {
+    font-family: 'DM Mono', monospace; font-size: 52px; font-weight: 500;
+    line-height: 1;
+  }
+  .score-label { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: .06em; }
+  .score-tier { font-size: 12px; font-weight: 600; letter-spacing: .1em; margin-top: 2px; }
+
+  .level-track {
+    height: 8px; background: var(--surface2);
+    border-radius: 4px; overflow: hidden; margin: 12px 0 6px;
+  }
+  .level-fill {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    transition: width 1.5s cubic-bezier(.4,0,.2,1);
+  }
+  .level-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); }
+
+  /* ── STATS ROW ── */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 20px;
+    transition: border-color .2s;
+  }
+  .stat-card:hover { border-color: var(--border2); }
+  .stat-label { font-size: 11px; color: var(--muted); letter-spacing: .05em; margin-bottom: 8px; }
+  .stat-val { font-family: 'DM Mono', monospace; font-size: 28px; font-weight: 500; line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 5px; }
+  .stat-trend { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 500; margin-top: 5px; }
+  .trend-up { color: var(--accent); }
+  .trend-dn { color: var(--danger); }
+
+  /* ── BADGES ── */
+  .badge-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
+  .badge {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 10px 16px;
+    font-size: 12px; font-weight: 500;
+  }
+  .badge-icon { font-size: 16px; }
+
+  /* ── TWO / THREE COLUMN ── */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+
+  /* ── CARD BASE ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 22px 24px;
+  }
+  .card-title {
+    font-size: 13px; font-weight: 600; letter-spacing: .05em;
+    color: var(--muted); margin-bottom: 18px; text-transform: uppercase;
+  }
+
+  /* ── SCORE BREAKDOWN ── */
+  .criterion-row { margin-bottom: 14px; }
+  .criterion-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .criterion-name { font-size: 13px; }
+  .criterion-score { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; }
+  .criterion-weight { font-size: 11px; color: var(--muted); }
+  .bar-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 1.2s cubic-bezier(.4,0,.2,1); }
+
+  /* ── ZONE BAR ── */
+  .zone-bar {
+    height: 10px; border-radius: 5px;
+    background: linear-gradient(90deg, var(--danger) 0%, var(--warn) 30%, #88cc88 60%, var(--accent) 100%);
+    position: relative; margin: 16px 0 8px;
+  }
+  .zone-needle {
+    position: absolute; top: -5px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--text); border: 3px solid var(--bg);
+    transform: translateX(-50%);
+    transition: left 1.2s cubic-bezier(.4,0,.2,1);
+  }
+  .zone-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--muted); }
+
+  /* ── LOAD HISTORY ── */
+  .load-row {
+    display: grid; grid-template-columns: 36px 1fr 90px 80px 70px;
+    align-items: center; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .load-row:last-child { border-bottom: none; }
+  .color-dot { width: 10px; height: 10px; border-radius: 50%; margin: 0 auto; }
+  .load-route { font-size: 13px; }
+  .load-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .load-price { font-family: 'DM Mono', monospace; font-size: 13px; text-align: right; }
+  .load-status { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 8px; text-align: center; }
+  .status-ok { background: rgba(126,232,162,0.12); color: var(--accent); }
+  .status-late { background: rgba(240,112,112,0.12); color: var(--danger); }
+
+  /* ── MONTHLY CHART ── */
+  .month-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+  .month-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .month-bar {
+    width: 100%; border-radius: 4px 4px 0 0;
+    background: var(--surface2); position: relative; overflow: hidden;
+    transition: background .2s;
+  }
+  .month-bar:hover { background: rgba(126,232,162,0.2); }
+  .month-bar-fill {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: var(--accent); opacity: 0.7; border-radius: 4px 4px 0 0;
+    transition: height 1.2s cubic-bezier(.4,0,.2,1);
+  }
+  .month-label { font-size: 10px; color: var(--muted); }
+
+  /* ── UPCOMING ── */
+  .upcoming-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .upcoming-item:last-child { border-bottom: none; }
+  .upcoming-route { font-size: 13px; }
+  .upcoming-time { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .upcoming-price { font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500; }
+
+  /* ── RECOMMENDATIONS ── */
+  .rec-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .rec-item:last-child { border-bottom: none; }
+  .rec-icon { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .rec-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .rec-desc { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .rec-gain { font-size: 11px; font-weight: 600; margin-top: 4px; color: var(--accent); }
+
+  /* ── ANIM ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .anim { animation: fadeUp .5s ease both; }
+  .a1{animation-delay:.05s}.a2{animation-delay:.1s}.a3{animation-delay:.15s}
+  .a4{animation-delay:.2s}.a5{animation-delay:.25s}.a6{animation-delay:.3s}
+  .a7{animation-delay:.35s}.a8{animation-delay:.4s}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:700px){
+    .stats-row{grid-template-columns:1fr 1fr}
+    .two-col,.three-col{grid-template-columns:1fr}
+    .hero{grid-template-columns:auto 1fr;gap:16px}
+    .hero-score-box{display:none}
+    .load-row{grid-template-columns:28px 1fr 70px}
+    .load-price,.load-status{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- NAV -->
+  <nav class="nav anim">
+    <div class="nav-logo">Freight<span>UZ</span></div>
+    <div class="nav-right">
+      <a href="{% url 'interests_page' %}" class="nav-back">← Manfaatlar</a>
+      <a href="{% url 'load_list' %}" class="nav-pill">Yuklar</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero anim a1">
+    <div class="avatar" id="avatar-initials">??</div>
+    <div class="hero-info">
+      <h1 id="hero-name">{{ carrier.get_full_name }}</h1>
+      <div class="hero-meta" style="margin-top:8px">
+        <span class="hero-tag" id="tier-tag">...</span>
+        <span class="hero-tag tag-id">ID: UZ-CAR-{{ carrier.pk|stringformat:"04d" }}</span>
+        <span class="hero-tag tag-city" id="hero-city">...</span>
+        <span style="font-size:12px;color:var(--muted)">@{{ carrier.username }}</span>
+      </div>
+      <div style="margin-top:14px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:6px" id="level-hint">...</div>
+        <div class="level-track" style="width:300px;max-width:100%">
+          <div class="level-fill" id="level-fill" style="width:0%"></div>
+        </div>
+        <div class="level-labels" style="width:300px;max-width:100%" id="level-labels">
+          <span>...</span><span id="level-current">...</span><span>...</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-score-box">
+      <div class="score-big" id="score-big" style="color:var(--gold)">0</div>
+      <div class="score-label">KOMPOZIT BALL</div>
+      <div class="score-tier" id="score-tier-label" style="color:var(--gold)">...</div>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stats-row anim a2">
+    <div class="stat-card">
+      <div class="stat-label">JAMI YETKAZISH</div>
+      <div class="stat-val" id="stat-deliveries" style="color:var(--accent2)">—</div>
+      <div class="stat-sub">So'nggi 12 oy</div>
+      <div class="stat-trend trend-up" id="stat-del-trend">▲ ...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">O'Z VAQTIDA</div>
+      <div class="stat-val" id="stat-ontime" style="color:var(--accent)">—</div>
+      <div class="stat-sub">Vaqtida yetkazish</div>
+      <div class="stat-trend trend-up" id="stat-ontime-trend">▲ ...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">YILLIK DAROMAD</div>
+      <div class="stat-val" id="stat-income" style="color:var(--gold)">—</div>
+      <div class="stat-sub">So'm (2025)</div>
+      <div class="stat-trend trend-up" id="stat-income-trend">▲ ...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">ZARAR HOLATLARI</div>
+      <div class="stat-val" id="stat-damage" style="color:var(--danger)">—</div>
+      <div class="stat-sub">So'nggi 12 oy</div>
+      <div class="stat-trend trend-dn">▼ Maqsad: 0</div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="badge-strip anim a3" id="badge-strip">
+    <!-- filled by JS -->
+  </div>
+
+  <!-- SCORE BREAKDOWN + MONTHLY -->
+  <div class="two-col anim a4">
+    <div class="card">
+      <div class="card-title">Ball tarkibi</div>
+
+      <div class="zone-bar">
+        <div class="zone-needle" id="zone-needle" style="left:0%"></div>
+      </div>
+      <div class="zone-labels">
+        <span>Probation &lt;70</span><span>Silver 70</span><span>Gold 85</span><span>Platinum 95</span>
+      </div>
+
+      <div style="height:16px"></div>
+
+      <div class="criterion-row">
+        <div class="criterion-header">
+          <span class="criterion-name">Vaqtida yetkazish</span>
+          <span><span class="criterion-score" id="cs1" style="color:var(--accent)">—</span> <span class="criterion-weight" id="cw1">× 0.35 = —</span></span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="b1" style="width:0%;background:var(--accent)"></div></div>
+      </div>
+
+      <div class="criterion-row">
+        <div class="criterion-header">
+          <span class="criterion-name">Yuk xavfsizligi</span>
+          <span><span class="criterion-score" id="cs2" style="color:var(--accent2)">—</span> <span class="criterion-weight" id="cw2">× 0.25 = —</span></span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="b2" style="width:0%;background:var(--accent2)"></div></div>
+      </div>
+
+      <div class="criterion-row">
+        <div class="criterion-header">
+          <span class="criterion-name">Kommunikatsiya tezligi</span>
+          <span><span class="criterion-score" id="cs3" style="color:var(--warn)">—</span> <span class="criterion-weight" id="cw3">× 0.20 = —</span></span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="b3" style="width:0%;background:var(--warn)"></div></div>
+      </div>
+
+      <div class="criterion-row">
+        <div class="criterion-header">
+          <span class="criterion-name">Ishonchlilik (rad etmaslik)</span>
+          <span><span class="criterion-score" id="cs4" style="color:var(--accent)">—</span> <span class="criterion-weight" id="cw4">× 0.20 = —</span></span>
+        </div>
+        <div class="bar-track"><div class="bar-fill" id="b4" style="width:0%;background:var(--accent)"></div></div>
+      </div>
+
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--muted)">Kompozit ball (S)</span>
+        <span style="font-family:'DM Mono',monospace;font-size:24px;font-weight:500;color:var(--gold)" id="composite-bottom">—</span>
+      </div>
+
+      <!-- weak points -->
+      <div id="weak-points-container"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Oylik yetkazishlar</div>
+      <div class="month-chart" id="month-chart"></div>
+      <div style="margin-top:20px">
+        <div class="card-title" style="margin-bottom:12px">Yuk turi bo'yicha taqsimot</div>
+        <div id="load-type-dist"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOAD HISTORY + UPCOMING -->
+  <div class="two-col anim a5">
+    <div class="card">
+      <div class="card-title">So'nggi yetkazishlar</div>
+      <div>
+        <div class="load-row" style="font-size:11px;color:var(--muted);padding-bottom:6px">
+          <span></span><span>Yo'nalish</span><span style="text-align:right">Narx</span><span>Holat</span>
+        </div>
+        <div id="delivery-history"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Rejalashtirilgan yuklar</div>
+      <div id="upcoming-loads"></div>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+        <div class="card-title" style="margin-bottom:12px">Haftalik daromad (so'm)</div>
+        <div id="weekly-income"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECOMMENDATIONS + COMPETITORS -->
+  <div class="two-col anim a6">
+    <div class="card">
+      <div class="card-title">Tavsiyalar — ball oshirish</div>
+      <div id="recommendations"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Raqobatchilar taqqosi</div>
+      <div id="competitor-bars"></div>
+
+      <div style="background:rgba(200,184,248,0.08);border:1px solid rgba(200,184,248,0.2);border-radius:10px;padding:12px 14px;margin-top:16px">
+        <div style="font-size:12px;font-weight:600;color:var(--platinum);margin-bottom:4px">Platinum imtiyozlari</div>
+        <div style="font-size:12px;color:var(--muted)">γ = 0.92 narx imtiyozi · Birinchi navbat · Maxsus qizil yuklar · Yillik bonus</div>
+      </div>
+
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <div class="card-title" style="margin-bottom:10px">Hududiy qamrov</div>
+        <div id="regions-list" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VEHICLE + FINANCE + CONTACT -->
+  <div class="three-col anim a7">
+    <div class="card">
+      <div class="card-title">Avtomobil ma'lumotlari</div>
+      <div style="font-size:24px;margin-bottom:12px">🚚</div>
+      <div id="vehicle-info" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Moliyaviy ko'rsatkichlar</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="background:var(--surface2);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Bu oy (April)</div>
+          <div id="fin-this-month" style="font-family:'DM Mono',monospace;font-size:22px;color:var(--accent)">—</div>
+          <div style="font-size:11px;color:var(--muted)">so'm</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1;background:var(--surface2);border-radius:10px;padding:10px">
+            <div style="font-size:11px;color:var(--muted)">O'tgan oy</div>
+            <div id="fin-last-month" style="font-family:'DM Mono',monospace;font-size:16px;margin-top:2px">—</div>
+          </div>
+          <div style="flex:1;background:var(--surface2);border-radius:10px;padding:10px">
+            <div style="font-size:11px;color:var(--muted)">O'sish</div>
+            <div id="fin-growth" style="font-family:'DM Mono',monospace;font-size:16px;margin-top:2px">—</div>
+          </div>
+        </div>
+        <div style="background:rgba(126,232,162,0.08);border:1px solid rgba(126,232,162,0.2);border-radius:10px;padding:10px">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:2px">Platinum uchun kutilgan bonus</div>
+          <div style="font-size:13px;font-weight:500;color:var(--accent)">+1,200,000 so'm / oy</div>
+          <div style="font-size:11px;color:var(--muted)">γ=0.92 narx imtiyozi hisobida</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Aloqa va hujjatlar</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)">
+          <span style="color:var(--muted)">Foydalanuvchi</span>
+          <span style="color:var(--accent2)">@{{ carrier.username }}</span>
+        </div>
+        <div id="contact-rows"></div>
+        <!-- Kompozit ball = DB status, shown here for reference -->
+        <div style="margin-top:8px;padding-top:10px;border-top:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase">Kompozit ball</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+              <div id="contact-score-bar" style="height:100%;border-radius:3px;width:0%;transition:width 1.2s ease"></div>
+            </div>
+            <span id="contact-score-val" style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500">{{ carrier_status }}/100</span>
+            <span id="contact-tier-label" style="font-size:11px;color:var(--muted)">...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Seeded random (deterministic per carrier pk) ──────────────────────────
+const SEED = {{ carrier.pk }};
+function mulberry32(seed) {
+  return function() {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  }
+}
+const rng = mulberry32(SEED * 2654435761);
+
+function randInt(min, max) { return Math.floor(rng() * (max - min + 1)) + min; }
+function randFloat(min, max, dec=1) { return parseFloat((rng() * (max - min) + min).toFixed(dec)); }
+function pick(arr) { return arr[Math.floor(rng() * arr.length)]; }
+
+// ── Data generation ───────────────────────────────────────────────────────
+const FIRST  = '{{ carrier.first_name|escapejs }}';
+const LAST   = '{{ carrier.last_name|escapejs }}';
+const INITIALS = (FIRST[0]||'?').toUpperCase() + (LAST[0]||'?').toUpperCase();
+
+// ── Composite = DB status score (source of truth) ────────────────────────
+const composite = {{ carrier_status }};  // real value from DB (1–100)
+
+// ── Criterion scores: generated with variance but their weighted sum = composite ──
+// Weights: c1×0.35 + c2×0.25 + c3×0.20 + c4×0.20 = composite
+// Strategy: generate offsets [-10, +10] for c1..c3, then solve c4 to satisfy the equation.
+// Clamp all to [1, 100].
+function clamp(v, lo=1, hi=100) { return Math.max(lo, Math.min(hi, v)); }
+
+const c1_raw = clamp(composite + (rng() * 20 - 10));   // vaqtida yetkazish  (weight 0.35)
+const c2_raw = clamp(composite + (rng() * 16 - 8));    // yuk xavfsizligi    (weight 0.25)
+const c3_raw = clamp(composite + (rng() * 28 - 14));   // kommunikatsiya     (weight 0.20) — most variance
+// Solve: c4 = (composite - c1*0.35 - c2*0.25 - c3*0.20) / 0.20
+const c4_solved = (composite - c1_raw * 0.35 - c2_raw * 0.25 - c3_raw * 0.20) / 0.20;
+const c4_raw = clamp(c4_solved);
+
+// Round to 1 decimal
+const c1 = parseFloat(c1_raw.toFixed(1));
+const c2 = parseFloat(c2_raw.toFixed(1));
+const c3 = parseFloat(c3_raw.toFixed(1));
+const c4 = parseFloat(c4_raw.toFixed(1));
+
+// Stats — scale ranges to match composite level
+const deliveries   = randInt(300, 2000);
+// ontime mirrors c1 (vaqtida yetkazish criterion)
+const ontime       = c1;
+const annualIncome = randInt(150, 800);    // M
+const damage       = randInt(3, 8);
+
+// Tier
+function getTier(s) {
+  if (s >= 95) return { label:'Platinum', color:'var(--platinum)', tagClass:'tag-platinum', next:null, nextVal:100 };
+  if (s >= 85) return { label:'Gold',     color:'var(--gold)',     tagClass:'tag-gold',     next:'Platinum', nextVal:95 };
+  if (s >= 70) return { label:'Silver',   color:'var(--silver)',   tagClass:'tag-silver',   next:'Gold',     nextVal:85 };
+  return { label:'Probation', color:'var(--danger)', tagClass:'tag-id', next:'Silver', nextVal:70 };
+}
+const tier = getTier(composite);
+
+// Cities (12 Uzbekistan regions)
+const ALL_REGIONS = ['Toshkent','Samarqand','Buxoro','Namangan','Andijon','Farg\'ona','Xorazm','Surxondaryo','Qashqadaryo','Navoiy','Sirdaryo','Jizzax'];
+// Pick a home city
+const homeCity = ALL_REGIONS[randInt(0, ALL_REGIONS.length - 1)];
+// Pick covered regions (at least 4, up to 12)
+const numRegions = randInt(4, 12);
+const shuffled = [...ALL_REGIONS].sort(() => rng() - 0.5);
+const coveredRegions = shuffled.slice(0, numRegions);
+
+// Vehicle data (10 options, pick one by seed)
+const VEHICLES = [
+  { brand:'Mercedes Sprinter', year:2021, plate:`01 A ${randInt(100,999)} BA`, cap:3500, vol:18, type:'Qoplamlangan' },
+  { brand:'Ford Transit',       year:2020, plate:`10 B ${randInt(100,999)} CE`, cap:2500, vol:14, type:'Yopiq' },
+  { brand:'Isuzu NPR',          year:2019, plate:`22 D ${randInt(100,999)} FA`, cap:5000, vol:24, type:'Tentli' },
+  { brand:'Hyundai County',     year:2022, plate:`30 E ${randInt(100,999)} GA`, cap:4000, vol:20, type:'Qoplamlangan' },
+  { brand:'MAN TGL',            year:2020, plate:`40 F ${randInt(100,999)} HA`, cap:7500, vol:30, type:'Tentli' },
+  { brand:'Volvo FH',           year:2021, plate:`50 G ${randInt(100,999)} IA`, cap:20000,vol:82, type:'Sovutgichli' },
+  { brand:'DAF XF',             year:2018, plate:`60 H ${randInt(100,999)} JA`, cap:22000,vol:86, type:'Tentli' },
+  { brand:'Iveco Daily',        year:2023, plate:`70 K ${randInt(100,999)} LA`, cap:3200, vol:16, type:'Yopiq' },
+  { brand:'Kamaz 5490',         year:2020, plate:`80 L ${randInt(100,999)} MA`, cap:18000,vol:78, type:'Tentli' },
+  { brand:'Scania R450',        year:2022, plate:`90 M ${randInt(100,999)} NA`, cap:24000,vol:90, type:'Muzlatgich' },
+];
+const vehicle = VEHICLES[SEED % VEHICLES.length];
+
+// Financial (this month & last month: 12M–25M)
+const finThis  = randInt(12000000, 25000000);
+const finLast  = randInt(12000000, 25000000);
+const finGrowth = (((finThis - finLast) / finLast) * 100).toFixed(1);
+
+// Monthly deliveries chart (last 12 months)
+const MON_LABELS = ['Sep','Okt','Noy','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'];
+const monthVals = MON_LABELS.map(() => randInt(20, 130));
+
+// Load type distribution
+const redPct   = randInt(20, 35);
+const yellowPct= randInt(25, 40);
+const greenPct = randInt(15, 30);
+const whitePct = 100 - redPct - yellowPct - greenPct;
+
+// 6 past deliveries
+const ROUTE_FROM = ['Toshkent','Samarqand','Buxoro','Namangan','Andijon','Farg\'ona','Xorazm','Surxondaryo'];
+const ROUTE_TO   = ['Samarqand','Buxoro','Toshkent','Namangan','Andijon','Farg\'ona','Qashqadaryo','Navoiy'];
+const COLORS_LOAD = ['var(--red-load)','var(--yellow-load)','var(--green-load)','var(--white-load)'];
+const DATES  = ['Bugun, 09:30','Kecha, 14:15','12 Apr','11 Apr','10 Apr','9 Apr'];
+const past6 = DATES.map((d, i) => {
+  const from = ROUTE_FROM[randInt(0, ROUTE_FROM.length-1)];
+  let to = ROUTE_TO[randInt(0, ROUTE_TO.length-1)];
+  if (to === from) to = ROUTE_TO[(ROUTE_TO.indexOf(to)+1) % ROUTE_TO.length];
+  const price = randInt(300000, 1500000);
+  const late  = rng() < 0.25;
+  const delay = late ? randInt(10, 60) : 0;
+  const color = COLORS_LOAD[randInt(0, COLORS_LOAD.length-1)];
+  return { from, to, date:d, price, late, delay, color };
+});
+
+// 3 upcoming loads
+const FUTURE_DATES = ['Ertaga 08:00','16 Apr 10:30','18 Apr 07:00'];
+const upcoming3 = FUTURE_DATES.map((d) => {
+  const from = ROUTE_FROM[randInt(0, ROUTE_FROM.length-1)];
+  let to = ROUTE_TO[randInt(0, ROUTE_TO.length-1)];
+  if (to === from) to = ROUTE_TO[(ROUTE_TO.indexOf(to)+1) % ROUTE_TO.length];
+  const kg = randInt(200, 3000);
+  const price = randInt(300000, 1200000);
+  const color = COLORS_LOAD[randInt(0, COLORS_LOAD.length-1)];
+  return { from, to, date:d, kg, price, color };
+});
+
+// Weekly income (Mon–Thu)
+const WEEK_DAYS = ['Dushanba','Seshanba','Chorshanba','Payshanba'];
+const weeklyAmounts = WEEK_DAYS.map(() => randInt(300000, 1600000));
+const weeklyTotal = weeklyAmounts.reduce((a,b)=>a+b,0);
+
+// Weak points (3–4 items based on lowest scoring criterion)
+const criteria = [
+  { name:'Vaqtida yetkazish',       score:c1, hint:`O'rtacha kechikish: ${randInt(10,60)} daqiqa. Maqsad: kechikmaslik.`, gain:'+2.8 ball' },
+  { name:'Kommunikatsiya tezligi',  score:c3, hint:`O'rtacha javob vaqti: ${randInt(20,80)} daqiqa. Maqsad: <30 daqiqa.`, gain:'+4.1 ball' },
+  { name:'Yuk xavfsizligi',         score:c2, hint:`${damage} zarar holati. Maqsad: nol.`, gain:'+2.4 ball' },
+  { name:'Ishonchlilik',            score:c4, hint:`Rad etish darajasi yuqori. Qabul qilingan buyurtmalarni bajaring.`, gain:'+3.0 ball' },
+];
+// Sort by score asc → weakest first, show top 3-4
+const weakPoints = criteria.slice().sort((a,b)=>a.score-b.score).slice(0, randInt(3,4));
+
+// Recommendations (match weak points)
+const REC_ICONS = ['📱','📦','🛡','🤝'];
+const REC_COLORS = ['rgba(240,112,112,0.12)','rgba(245,200,66,0.12)','rgba(126,232,162,0.12)','rgba(91,196,245,0.12)'];
+const recTemplates = [
+  { title:'Javob vaqtini qisqartiring', icon:'📱', color:'rgba(240,112,112,0.12)' },
+  { title:'Qizil yuklar ulushini oshiring', icon:'📦', color:'rgba(245,200,66,0.12)' },
+  { title:'Nol zarar maqsadi',           icon:'🛡', color:'rgba(126,232,162,0.12)' },
+  { title:'Barcha buyurtmalarni bajaring',icon:'🤝', color:'rgba(91,196,245,0.12)' },
+];
+
+// ── DOM Rendering ─────────────────────────────────────────────────────────
+function fmt(n) { return n.toLocaleString('uz-UZ'); }
+
+// Avatar initials
+document.getElementById('avatar-initials').textContent = INITIALS;
+
+// Tier tag
+const ttag = document.getElementById('tier-tag');
+ttag.className = `hero-tag ${tier.tagClass}`;
+ttag.textContent = `⭐ ${tier.label} darajasi`;
+
+// City
+document.getElementById('hero-city').textContent = homeCity;
+
+// Level progress
+const levelMin  = tier.label==='Platinum' ? 95 : tier.label==='Gold' ? 85 : tier.label==='Silver' ? 70 : 0;
+const levelMax  = tier.nextVal;
+const levelPct  = tier.next ? Math.min(100, ((composite - levelMin) / (levelMax - levelMin)) * 100) : 100;
+document.getElementById('level-fill').style.width = levelPct + '%';
+document.getElementById('level-hint').textContent = tier.next
+  ? `${tier.next} ga yetish uchun: +${(levelMax - composite).toFixed(1)} ball kerak`
+  : 'Maksimal daraja — Platinum!';
+document.getElementById('level-labels').innerHTML = `
+  <span>${tier.label} (${levelMin})</span>
+  <span>${composite} / ${levelMax}</span>
+  <span>${tier.next || 'MAX'}</span>`;
+
+// Score big animation
+const scoreTgt = composite;
+let cur = 0;
+const scoreEl = document.getElementById('score-big');
+scoreEl.style.color = tier.color;
+const scoreTimer = setInterval(() => {
+  cur = Math.min(scoreTgt, cur + 1.2);
+  scoreEl.textContent = cur.toFixed(1);
+  if (cur >= scoreTgt) clearInterval(scoreTimer);
+}, 16);
+document.getElementById('score-tier-label').textContent = tier.label.toUpperCase() + ' TIER';
+document.getElementById('score-tier-label').style.color = tier.color;
+
+// Stats
+document.getElementById('stat-deliveries').textContent = fmt(deliveries);
+document.getElementById('stat-del-trend').textContent = `▲ +${randInt(10,30)}% o'tgan yilga nisbatan`;
+document.getElementById('stat-ontime').textContent = ontime + '%';
+document.getElementById('stat-ontime-trend').textContent = `▲ +${randFloat(0.5,4.5,1)}% so'nggi oy`;
+document.getElementById('stat-income').textContent = annualIncome + 'M';
+document.getElementById('stat-income-trend').textContent = `▲ +${randInt(10,35)}% o'tgan yilga`;
+document.getElementById('stat-damage').textContent = damage;
+
+// Badges
+const badgeDefs = [];
+if (deliveries >= 500) badgeDefs.push({ icon:'🏆', text:`${Math.floor(deliveries/100)*100}+ yetkazish seriyasi` });
+if (ontime >= 90)       badgeDefs.push({ icon:'⚡️', text:'Tezkor — top 10%' });
+if (damage <= 3)        badgeDefs.push({ icon:'🛡', text:'Zararsiz yetkazuvchi' });
+badgeDefs.push({ icon:'🗺', text:`${coveredRegions.length} viloyat qamrovi` });
+if (composite >= 85)    badgeDefs.push({ icon:'⭐️', text:`${(randFloat(3.5,5.0,1))}/5.0 shipper bahosi` });
+const bStrip = document.getElementById('badge-strip');
+badgeDefs.forEach(b => {
+  bStrip.innerHTML += `<div class="badge"><span class="badge-icon">${b.icon}</span> ${b.text}</div>`;
+});
+
+// Criterion bars
+setTimeout(() => {
+  const parts = [c1*0.35, c2*0.25, c3*0.20, c4*0.20];
+  [[c1,'b1','cs1','cw1',0.35],[c2,'b2','cs2','cw2',0.25],[c3,'b3','cs3','cw3',0.20],[c4,'b4','cs4','cw4',0.20]]
+    .forEach(([val, bid, csid, cwid, w]) => {
+      document.getElementById(bid).style.width = val + '%';
+      document.getElementById(csid).textContent = val.toFixed(1);
+      document.getElementById(cwid).textContent = `× ${w.toFixed(2)} = ${(val*w).toFixed(1)}`;
+    });
+  document.getElementById('composite-bottom').textContent = composite;
+  document.getElementById('zone-needle').style.left = Math.min(99, composite) + '%';
+}, 400);
+
+// Weak points
+const weakContainer = document.getElementById('weak-points-container');
+weakPoints.forEach(wp => {
+  weakContainer.innerHTML += `
+    <div style="margin-top:12px;background:rgba(240,112,112,0.08);border:1px solid rgba(240,112,112,0.2);border-radius:10px;padding:12px 14px">
+      <div style="font-size:12px;font-weight:600;color:var(--danger);margin-bottom:4px">Zaif nuqta: ${wp.name}</div>
+      <div style="font-size:12px;color:var(--muted)">${wp.hint} Yaxshilasangiz ball ${wp.gain} ga ko'tariladi.</div>
+    </div>`;
+});
+
+// Monthly chart
+const maxV = Math.max(...monthVals);
+const chartEl = document.getElementById('month-chart');
+MON_LABELS.forEach((m, i) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'month-bar-wrap';
+  wrap.innerHTML = `
+    <div class="month-bar" style="height:60px" title="${m}: ${monthVals[i]} yetkazish">
+      <div class="month-bar-fill" id="mb-${i}" style="height:0%"></div>
+    </div>
+    <div class="month-label">${m}</div>`;
+  chartEl.appendChild(wrap);
+});
+setTimeout(() => {
+  MON_LABELS.forEach((m, i) => {
+    const el = document.getElementById('mb-' + i);
+    if (el) el.style.height = (monthVals[i] / maxV * 100) + '%';
+  });
+}, 600);
+
+// Load type distribution
+const distEl = document.getElementById('load-type-dist');
+[
+  { color:'var(--red-load)',   label:'Qizil (shoshilinch)', pct:redPct },
+  { color:'var(--yellow-load)',label:'Sariq (24-48h)',      pct:yellowPct },
+  { color:'var(--green-load)', label:'Yashil (48-72h)',     pct:greenPct },
+  { color:'var(--white-load)', label:'Oq (72h+)',           pct:whitePct },
+].forEach(d => {
+  distEl.innerHTML += `
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+      <div style="width:10px;height:10px;border-radius:50%;background:${d.color}"></div>
+      <span style="font-size:12px;flex:1">${d.label}</span>
+      <div style="flex:2;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden">
+        <div style="height:100%;width:${d.pct}%;background:${d.color};border-radius:3px"></div>
+      </div>
+      <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);min-width:28px">${d.pct}%</span>
+    </div>`;
+});
+
+// Delivery history (6 entries)
+const histEl = document.getElementById('delivery-history');
+past6.forEach(d => {
+  histEl.innerHTML += `
+    <div class="load-row">
+      <div class="color-dot" style="background:${d.color}"></div>
+      <div>
+        <div class="load-route">${d.from} → ${d.to}</div>
+        <div class="load-date">${d.date}</div>
+      </div>
+      <div class="load-price" ${d.price > 1000000 ? 'style="color:var(--accent)"' : ''}>${fmt(d.price)}</div>
+      <div class="load-status ${d.late ? 'status-late' : 'status-ok'}">${d.late ? `+${d.delay} daqiqa` : "O'z vaqtida"}</div>
+    </div>`;
+});
+
+// Upcoming loads
+const upEl = document.getElementById('upcoming-loads');
+upcoming3.forEach(u => {
+  upEl.innerHTML += `
+    <div class="upcoming-item">
+      <div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:8px;height:8px;border-radius:50%;background:${u.color}"></div>
+          <div class="upcoming-route">${u.from} → ${u.to}</div>
+        </div>
+        <div class="upcoming-time">${u.date} — ${fmt(u.kg)} kg</div>
+      </div>
+      <div class="upcoming-price">${fmt(u.price)}</div>
+    </div>`;
+});
+
+// Weekly income
+const wkEl = document.getElementById('weekly-income');
+WEEK_DAYS.forEach((day, i) => {
+  wkEl.innerHTML += `
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px">
+      <span style="color:var(--muted)">${day}</span>
+      <span style="font-family:'DM Mono',monospace">${fmt(weeklyAmounts[i])}</span>
+    </div>`;
+});
+wkEl.innerHTML += `
+  <div style="display:flex;justify-content:space-between;font-size:12px;padding-top:8px;border-top:1px solid var(--border);font-weight:500;margin-top:2px">
+    <span>Jami (bu hafta)</span>
+    <span style="font-family:'DM Mono',monospace;color:var(--accent)">${fmt(weeklyTotal)}</span>
+  </div>`;
+
+// Recommendations
+const recEl = document.getElementById('recommendations');
+weakPoints.slice(0, 3).forEach((wp, i) => {
+  const tmpl = recTemplates[i % recTemplates.length];
+  recEl.innerHTML += `
+    <div class="rec-item">
+      <div class="rec-icon" style="background:${tmpl.color}">${tmpl.icon}</div>
+      <div>
+        <div class="rec-title">${tmpl.title}</div>
+        <div class="rec-desc">${wp.hint}</div>
+        <div class="rec-gain">▲ ${wp.gain} | ${tier.label} → ${tier.next || 'MAX'} ga yaqinlashadi</div>
+      </div>
+    </div>`;
+});
+
+// Competitor bars
+const compEl = document.getElementById('competitor-bars');
+const goldAvg = parseFloat((composite - randFloat(0.5, 3.5, 1)).toFixed(1));
+[
+  { label:`Siz (${FIRST} ${LAST[0]||''}.`, val:composite, color:tier.color },
+  { label:'Gold o\'rtacha',   val:goldAvg, color:'var(--muted)' },
+  { label:'Platinum chegarasi', val:95,   color:'var(--platinum)' },
+].forEach(c => {
+  compEl.innerHTML += `
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:13px;color:${c.color==='var(--muted)'?'var(--muted)':'inherit'};font-weight:${c.label.startsWith('Siz')?500:400}">${c.label}</span>
+        <span style="font-family:'DM Mono',monospace;color:${c.color}">${c.val}</span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${c.val}%;background:${c.color}"></div></div>
+    </div>`;
+});
+
+// Regions
+const regEl = document.getElementById('regions-list');
+coveredRegions.forEach((r, i) => {
+  if (i < coveredRegions.length - 1 || coveredRegions.length <= 5) {
+    regEl.innerHTML += `<span style="font-size:11px;padding:4px 10px;background:rgba(91,196,245,0.1);color:var(--accent2);border-radius:8px;border:1px solid rgba(91,196,245,0.2)">${r}</span>`;
+  } else {
+    regEl.innerHTML += `<span style="font-size:11px;padding:4px 10px;background:var(--surface2);color:var(--muted);border-radius:8px;border:1px solid var(--border)">+${coveredRegions.length - 4} viloyat</span>`;
+  }
+});
+
+// Vehicle info
+const vEl = document.getElementById('vehicle-info');
+[
+  ['Marka', vehicle.brand], ['Yil', vehicle.year],
+  ['Raqam', vehicle.plate], ['Yuk sig\'imi', `${fmt(vehicle.cap)} kg`],
+  ['Hajm', `${vehicle.vol} m³`], ['Yuk turi', vehicle.type],
+].forEach(([k,v]) => {
+  vEl.innerHTML += `
+    <div style="display:flex;justify-content:space-between;font-size:13px">
+      <span style="color:var(--muted)">${k}</span>
+      <span ${k==='Raqam' ? "style=\"font-family:'DM Mono',monospace\"" : ''}>${v}</span>
+    </div>`;
+});
+vEl.innerHTML += `
+  <div style="margin-top:6px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-size:12px">
+    <span style="color:var(--muted)">GPS holati</span>
+    <span style="color:var(--accent);font-weight:500">● Faol</span>
+  </div>`;
+
+// Financial
+document.getElementById('fin-this-month').textContent = fmt(finThis);
+document.getElementById('fin-last-month').textContent = fmt(finLast);
+const gEl = document.getElementById('fin-growth');
+gEl.textContent = (finGrowth > 0 ? '+' : '') + finGrowth + '%';
+gEl.style.color = finGrowth >= 0 ? 'var(--accent)' : 'var(--danger)';
+
+// Contact rows (generated)
+const phone = `+998 ${pick(['90','91','93','94','97','98','99'])} ${randInt(100,999)} ${randInt(10,99)} ${randInt(10,99)}`;
+document.getElementById('contact-rows').innerHTML = `
+  <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span style="color:var(--muted)">Telefon</span>
+    <span style="color:var(--accent2)">${phone}</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span style="color:var(--muted)">Whatsapp</span>
+    <span style="color:var(--accent)">● Faol</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span style="color:var(--muted)">Litsenziya</span>
+    <span style="color:var(--accent)">✓ Tasdiqlangan</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span style="color:var(--muted)">Sug'urta</span>
+    <span style="color:var(--accent)">✓ 2026 yil</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span style="color:var(--muted)">Texosmotr</span>
+    <span style="color:var(--warn)">⚠️ ${pick(['Avg 2025','Sen 2025','Okt 2025'])}</span>
+  </div>
+  <div style="display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border)">
+    <span style="color:var(--muted)">Soliq holati</span>
+    <span style="color:var(--accent)">✓ Faol</span>
+  </div>`;
+
+// Contact score bar — composite IS the DB status
+const barColor = composite >= 85 ? 'var(--accent)' : composite >= 70 ? 'var(--warn)' : 'var(--danger)';
+const barEl = document.getElementById('contact-score-bar');
+barEl.style.background = barColor;
+setTimeout(() => { barEl.style.width = composite + '%'; }, 800);
+document.getElementById('contact-score-val').style.color = barColor;
+document.getElementById('contact-tier-label').textContent = tier.label;
+</script>
+</body>
+</html>

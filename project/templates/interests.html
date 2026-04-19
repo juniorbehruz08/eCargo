@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title|default:"My Interests" }}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14; --surface: #161923; --surface2: #1e2535;
+    --border: #2a3347; --accent: #4a7cf7; --accent-dim: #1a2a5a;
+    --text: #e2e8f0; --text-dim: #8896b0; --text-muted: #4a5568;
+    --mono: 'IBM Plex Mono', monospace; --sans: 'IBM Plex Sans', sans-serif;
+    --red: #ef4444; --red-bg: #1a0808; --red-border: #7f1d1d;
+    --yellow: #eab308; --yellow-bg: #1a1400; --yellow-border: #713f12;
+    --green: #22c55e; --green-bg: #071a0e; --green-border: #14532d;
+    --gray: #6b7280; --gray-bg: #111318; --gray-border: #374151;
+    --radius: 6px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; min-height: 100vh; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 24px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar h1 { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .topbar-sep { flex: 1; }
+  .btn-back {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); padding: 7px 14px; border-radius: var(--radius);
+    font-size: 12px; cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;
+  }
+  .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Filter tabs */
+  .filter-bar {
+    display: flex; gap: 8px; padding: 14px 24px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 6px 16px; border-radius: var(--radius);
+    font-family: var(--mono); font-size: 11px; cursor: pointer;
+    border: 1px solid var(--border); color: var(--text-dim);
+    text-decoration: none; transition: all 0.15s;
+  }
+  .tab:hover, .tab.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .tab.pending.active  { border-color: var(--yellow-border); color: var(--yellow); background: var(--yellow-bg); }
+  .tab.accepted.active { border-color: var(--green-border); color: var(--green); background: var(--green-bg); }
+  .tab.rejected.active { border-color: var(--gray-border); color: var(--gray); background: var(--gray-bg); }
+
+  .content { padding: 24px; max-width: 1100px; margin: 0 auto; }
+
+  /* Load block */
+  .load-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 24px; overflow: hidden;
+  }
+  .load-block-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 14px 20px; background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .load-route {
+    display: flex; align-items: center; gap: 10px; flex: 1;
+  }
+  .load-place { display: flex; flex-direction: column; gap: 2px; }
+  .load-country { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--text-dim); }
+  .load-city { font-size: 13px; font-weight: 600; color: var(--text); }
+  .load-arrow { color: var(--text-muted); font-size: 16px; }
+  .load-meta { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+  .load-interest-count {
+    font-family: var(--mono); font-size: 11px; color: var(--accent);
+    background: var(--accent-dim); border: 1px solid var(--accent);
+    padding: 3px 10px; border-radius: 12px;
+  }
+
+  /* Interest cards grid */
+  .interests-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px; padding: 16px 20px;
+  }
+
+  .interest-card {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+    transition: border-color 0.15s;
+  }
+  .interest-card:hover { border-color: var(--border-active, #3d5a8a); }
+  .interest-card.pending  { border-left: 3px solid var(--yellow); }
+  .interest-card.accepted { border-left: 3px solid var(--green); }
+  .interest-card.rejected { border-left: 3px solid var(--gray); opacity: 0.7; }
+
+  .carrier-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .carrier-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--accent-dim); border: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--accent);
+    flex-shrink: 0; text-decoration: none;
+    transition: background 0.15s;
+  }
+  .carrier-avatar:hover { background: #1e3570; }
+
+  .carrier-info { flex: 1; min-width: 0; }
+  .carrier-name-link {
+    font-weight: 600; font-size: 13px; color: var(--text);
+    text-decoration: none; transition: color 0.15s;
+    display: block;
+  }
+  .carrier-name-link:hover { color: var(--accent); }
+  .carrier-username { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+
+  /* View profile link */
+  .btn-profile {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    color: var(--accent); background: var(--accent-dim);
+    border: 1px solid var(--accent); border-radius: 10px;
+    padding: 3px 9px; text-decoration: none;
+    transition: all 0.15s; white-space: nowrap;
+  }
+  .btn-profile:hover { background: #1e3570; }
+
+  /* Status badge */
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 10px;
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+  }
+  .status-pill.pending  { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
+  .status-pill.accepted { background: var(--green-bg);  color: var(--green);  border: 1px solid var(--green-border); }
+  .status-pill.rejected { background: var(--gray-bg);   color: var(--gray);   border: 1px solid var(--gray-border); }
+
+  /* Carrier status score */
+  .score-bar {
+    display: flex; align-items: center; gap: 8px; margin: 8px 0;
+  }
+  .score-track {
+    flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;
+  }
+  .score-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .score-fill.green  { background: #22c55e; }
+  .score-fill.yellow { background: #eab308; }
+  .score-fill.red    { background: #ef4444; }
+  .score-val { font-family: var(--mono); font-size: 10px; color: var(--text-dim); white-space: nowrap; }
+
+  .interest-message {
+    font-size: 12px; color: var(--text-dim); font-style: italic;
+    padding: 8px 10px; background: var(--surface2);
+    border-radius: 4px; margin: 10px 0; line-height: 1.5;
+  }
+
+  .interest-time { font-family: var(--mono); font-size: 10px; color: var(--text-muted); margin-bottom: 12px; }
+
+  .card-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+  .btn-accept {
+    flex: 1; background: var(--green-bg); border: 1px solid var(--green-border);
+    color: #22c55e; padding: 8px; border-radius: var(--radius);
+    cursor: pointer; font-size: 12px; font-weight: 600;
+    transition: all 0.15s; font-family: var(--sans);
+  }
+  .btn-accept:hover { background: #0d3020; }
+
+  .btn-reject {
+    flex: 1; background: var(--gray-bg); border: 1px solid var(--gray-border);
+    color: var(--gray); padding: 8px; border-radius: var(--radius);
+    cursor: pointer; font-size: 12px; transition: all 0.15s; font-family: var(--sans);
+  }
+  .btn-reject:hover { background: #1a1f28; }
+
+  .btn-chat {
+    flex: 1; background: var(--accent-dim); border: 1px solid var(--accent);
+    color: var(--accent); padding: 8px; border-radius: var(--radius);
+    cursor: pointer; font-size: 12px; font-weight: 600;
+    transition: all 0.15s; font-family: var(--sans); text-decoration: none;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .btn-chat:hover { background: #1e3570; }
+
+  .empty-page { text-align: center; padding: 80px 24px; color: var(--text-muted); }
+  .empty-page .icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-page h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-dim); }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 12px 18px; border-radius: var(--radius); font-size: 13px;
+    z-index: 999; opacity: 0; transform: translateY(10px); transition: all 0.2s;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+  .toast.success { border-color: var(--green); color: #22c55e; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📋 My Freight Interests</h1>
+  <div class="topbar-sep"></div>
+  <a href="{% url 'my_chats' %}" class="btn-back">💬 My Chats</a>
+  <a href="{% url 'load_list' %}" class="btn-back">← Back to Loads</a>
+</div>
+
+<div class="filter-bar">
+  <a href="?status=all"      class="tab {% if status_filter == 'all' %}active{% endif %}">All</a>
+  <a href="?status=pending"  class="tab pending  {% if status_filter == 'pending' %}active{% endif %}">⏳ Pending</a>
+  <a href="?status=accepted" class="tab accepted {% if status_filter == 'accepted' %}active{% endif %}">✓ Accepted</a>
+  <a href="?status=rejected" class="tab rejected {% if status_filter == 'rejected' %}active{% endif %}">✗ Rejected</a>
+</div>
+
+<div class="content">
+  {% if loads_data %}
+    {% for item in loads_data %}
+      {% if item.interests %}
+      <div class="load-block">
+        <div class="load-block-header">
+          <div class="load-route">
+            {% if item.pickup %}
+            <div class="load-place">
+              <span class="load-country">{{ item.pickup.country }}</span>
+              <span class="load-city">{{ item.pickup.city }}</span>
+            </div>
+            {% endif %}
+            <span class="load-arrow">→</span>
+            {% if item.delivery %}
+            <div class="load-place">
+              <span class="load-country">{{ item.delivery.country }}</span>
+              <span class="load-city">{{ item.delivery.city }}</span>
+            </div>
+            {% endif %}
+          </div>
+          <span class="load-meta">Load #{{ item.load.pk }}</span>
+          {% if item.load.total_price %}
+          <span class="load-meta">{{ item.load.total_price }} {{ item.load.currency }}</span>
+          {% endif %}
+          <span class="load-interest-count">{{ item.interest_count }} interest{{ item.interest_count|pluralize }}</span>
+        </div>
+
+        <div class="interests-grid">
+          {% for interest in item.interests %}
+          <div class="interest-card {{ interest.status }}" id="interest-card-{{ interest.pk }}">
+
+            <div class="carrier-header">
+              <!-- Avatar links to carrier profile -->
+              <a href="{% url 'carrier_info' interest.carrier.pk %}" class="carrier-avatar" title="Profilni ko'rish">
+                {{ interest.carrier.first_name|first|upper }}{{ interest.carrier.last_name|first|upper }}
+              </a>
+              <div class="carrier-info">
+                <!-- Name links to carrier profile -->
+                <a href="{% url 'carrier_info' interest.carrier.pk %}" class="carrier-name-link">
+                  {{ interest.carrier.get_full_name|default:interest.carrier.username }}
+                </a>
+                <div class="carrier-username">@{{ interest.carrier.username }}</div>
+              </div>
+              <span class="status-pill {{ interest.status }}">
+                {% if interest.status == 'pending' %}⏳ Pending
+                {% elif interest.status == 'accepted' %}✓ Accepted
+                {% else %}✗ Rejected{% endif %}
+              </span>
+            </div>
+
+            <!-- Carrier status score from DB -->
+            {% with score=interest.carrier.status %}
+            {% if score %}
+            <div class="score-bar">
+              <span style="font-size:10px;color:var(--text-muted);font-family:var(--mono)">Status</span>
+              <div class="score-track">
+                <div class="score-fill {{ score.color }}" style="width:{{ score.score }}%"></div>
+              </div>
+              <span class="score-val">{{ score.score }}/100 · {{ score.label }}</span>
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="interest-time">{{ interest.created_at|date:"d.m.Y H:i" }}</div>
+
+            {% if interest.message %}
+            <div class="interest-message">"{{ interest.message }}"</div>
+            {% endif %}
+
+            <!-- View profile button -->
+            <a href="{% url 'carrier_info' interest.carrier.pk %}" class="btn-profile">
+              👤 Profilni ko'rish
+            </a>
+
+            <div class="card-actions" id="actions-{{ interest.pk }}">
+              {% if interest.status == 'pending' %}
+                <button class="btn-accept" onclick="acceptInterest({{ interest.pk }})">✓ Accept</button>
+                <button class="btn-reject" onclick="rejectInterest({{ interest.pk }})">✗ Reject</button>
+              {% elif interest.status == 'accepted' %}
+                {% if interest.chat_room %}
+                <a href="{% url 'chat_view' interest.chat_room.pk %}" class="btn-chat">💬 Open Chat</a>
+                {% endif %}
+              {% endif %}
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    {% endfor %}
+
+    {% if not loads_data|length %}
+    <div class="empty-page">
+      <div class="icon">📭</div>
+      <h3>No interests yet</h3>
+      <p>Carriers will appear here when they express interest in your loads.</p>
+    </div>
+    {% endif %}
+
+  {% else %}
+  <div class="empty-page">
+    <div class="icon">📭</div>
+    <h3>No interests yet</h3>
+    <p>Carriers will appear here when they express interest in your loads.</p>
+  </div>
+  {% endif %}
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+async function acceptInterest(interestPk) {
+  const btn = document.querySelector(`#actions-${interestPk} .btn-accept`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Accepting…'; }
+
+  try {
+    const res = await fetch(`/interest/${interestPk}/accept/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast('Interest accepted! Chat is now open.', 'success');
+      const card = document.getElementById(`interest-card-${interestPk}`);
+      if (card) {
+        card.className = card.className.replace('pending', 'accepted');
+        const pill = card.querySelector('.status-pill');
+        if (pill) { pill.className = 'status-pill accepted'; pill.textContent = '✓ Accepted'; }
+        const actions = document.getElementById(`actions-${interestPk}`);
+        if (actions && data.chat_url) {
+          actions.innerHTML = `<a href="${data.chat_url}" class="btn-chat">💬 Open Chat</a>`;
+        }
+      }
+    } else {
+      showToast(data.error || 'Error accepting.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '✓ Accept'; }
+    }
+  } catch {
+    showToast('Network error.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '✓ Accept'; }
+  }
+}
+
+async function rejectInterest(interestPk) {
+  const btn = document.querySelector(`#actions-${interestPk} .btn-reject`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Rejecting…'; }
+
+  try {
+    const res = await fetch(`/interest/${interestPk}/reject/`, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCookie('csrftoken') },
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast('Interest rejected.', 'success');
+      const card = document.getElementById(`interest-card-${interestPk}`);
+      if (card) {
+        card.className = card.className.replace('pending', 'rejected');
+        const pill = card.querySelector('.status-pill');
+        if (pill) { pill.className = 'status-pill rejected'; pill.textContent = '✗ Rejected'; }
+        const actions = document.getElementById(`actions-${interestPk}`);
+        if (actions) actions.innerHTML = '';
+      }
+    } else {
+      showToast(data.error || 'Error.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '✗ Reject'; }
+    }
+  } catch {
+    showToast('Network error.', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '✗ Reject'; }
+  }
+}
+
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+function getCookie(name) {
+  return document.cookie.split(';').map(c => c.trim())
+    .find(c => c.startsWith(name + '='))?.split('=')[1] || '';
+}
+</script>
+</body>
+</html>

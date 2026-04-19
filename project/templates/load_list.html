@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title|default:"Freight Exchange" }}</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161923;
+    --surface2: #1e2535;
+    --border: #2a3347;
+    --accent: #4a7cf7;
+    --accent-dim: #1a2a5a;
+    --text: #e2e8f0;
+    --text-dim: #8896b0;
+    --text-muted: #4a5568;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --red: #ef4444; --red-bg: #1a0808; --red-border: #7f1d1d;
+    --yellow: #eab308; --yellow-bg: #1a1400; --yellow-border: #713f12;
+    --green: #22c55e; --green-bg: #071a0e; --green-border: #14532d;
+    --white-load: #94a3b8; --white-bg: #161923; --white-border: #2a3347;
+    --gray: #6b7280; --gray-bg: #111318; --gray-border: #374151;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; min-height: 100vh; }
+
+  .topbar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 24px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar h1 { font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+  .topbar-sep { flex: 1; }
+
+  .btn-add {
+    background: var(--accent); border: none; color: #fff;
+    padding: 8px 16px; border-radius: 5px; font-size: 13px;
+    font-weight: 600; cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-add:hover { background: #3a6ce7; }
+
+  /* Bell notification */
+  .bell-btn {
+    position: relative; background: transparent;
+    border: 1px solid var(--border); color: var(--text-dim);
+    padding: 7px 10px; border-radius: 5px; cursor: pointer;
+    font-size: 15px; transition: all 0.15s; text-decoration: none;
+    display: inline-flex; align-items: center;
+  }
+  .bell-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .bell-badge {
+    position: absolute; top: -5px; right: -5px;
+    background: var(--red); color: #fff;
+    border-radius: 50%; min-width: 16px; height: 16px;
+    font-size: 9px; font-family: var(--mono); font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 3px;
+  }
+  .bell-badge.hidden { display: none; }
+
+  /* Notification dropdown */
+  .notif-dropdown {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    width: 360px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    z-index: 999; display: none; overflow: hidden;
+  }
+  .notif-dropdown.open { display: block; }
+  .notif-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono); font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim);
+  }
+  .notif-mark-read {
+    background: transparent; border: none; color: var(--accent);
+    font-size: 11px; cursor: pointer; font-family: var(--sans);
+  }
+  .notif-list { max-height: 320px; overflow-y: auto; }
+  .notif-item {
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background 0.1s;
+  }
+  .notif-item:hover { background: var(--surface2); }
+  .notif-item.unread { border-left: 3px solid var(--accent); }
+  .notif-item .notif-text { font-size: 12px; color: var(--text); line-height: 1.5; }
+  .notif-item .notif-time { font-size: 10px; color: var(--text-muted); font-family: var(--mono); margin-top: 4px; }
+  .notif-empty { padding: 24px; text-align: center; color: var(--text-muted); font-size: 12px; }
+  .bell-wrapper { position: relative; }
+
+  /* Interests link button */
+  .interests-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); padding: 7px 14px; border-radius: 5px;
+    font-size: 12px; cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.15s; font-family: var(--mono);
+  }
+  .interests-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .interests-badge {
+    background: var(--accent); color: #fff;
+    border-radius: 10px; padding: 1px 6px;
+    font-size: 9px; font-weight: 700;
+  }
+
+  .legend {
+    display: flex; align-items: center; gap: 20px;
+    padding: 10px 24px; background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; font-family: var(--mono); flex-wrap: wrap;
+  }
+  .legend-label { color: var(--text-muted); margin-right: 4px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.red    { background: var(--red); box-shadow: 0 0 6px var(--red); }
+  .dot.yellow { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
+  .dot.green  { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .dot.white  { background: var(--white-load); }
+  .dot.gray   { background: var(--gray); }
+
+  .filters {
+    display: flex; gap: 8px; padding: 12px 24px;
+    border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text-dim); padding: 5px 12px; border-radius: 4px;
+    font-size: 11px; cursor: pointer; font-family: var(--mono); transition: all 0.15s;
+  }
+  .filter-btn.active, .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .table-wrapper { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead tr { background: var(--surface); border-bottom: 1px solid var(--border); }
+  th {
+    font-family: var(--mono); font-size: 9px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted);
+    padding: 10px 16px; text-align: left; white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; cursor: pointer; }
+  tbody tr:hover { background: var(--surface2); }
+  td { padding: 12px 16px; vertical-align: middle; }
+  td.color-stripe { width: 4px; padding: 0; }
+  tr.status-red td.color-stripe    { background: var(--red-border); }
+  tr.status-yellow td.color-stripe { background: var(--yellow-border); }
+  tr.status-green td.color-stripe  { background: var(--green-border); }
+  tr.status-white td.color-stripe  { background: var(--white-border); }
+  tr.status-gray td.color-stripe   { background: var(--gray-border); }
+  tr.status-red    { border-left: 3px solid var(--red); }
+  tr.status-yellow { border-left: 3px solid var(--yellow); }
+  tr.status-green  { border-left: 3px solid var(--green); }
+  tr.status-white  { border-left: 3px solid var(--white-load); }
+  tr.status-gray   { border-left: 3px solid var(--gray); opacity: 0.6; }
+
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 8px; border-radius: 12px; font-family: var(--mono);
+    font-size: 10px; font-weight: 500; white-space: nowrap;
+  }
+  .status-pill.red    { background: var(--red-bg);    color: var(--red);        border: 1px solid var(--red-border); }
+  .status-pill.yellow { background: var(--yellow-bg); color: var(--yellow);     border: 1px solid var(--yellow-border); }
+  .status-pill.green  { background: var(--green-bg);  color: var(--green);      border: 1px solid var(--green-border); }
+  .status-pill.white  { background: var(--white-bg);  color: var(--white-load); border: 1px solid var(--white-border); }
+  .status-pill.gray   { background: var(--gray-bg);   color: var(--gray);       border: 1px solid var(--gray-border); }
+
+  .route-cell { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+  .route-place { display: flex; flex-direction: column; gap: 1px; }
+  .route-country { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--text-dim); }
+  .route-city { font-size: 13px; font-weight: 500; color: var(--text); }
+  .route-postal { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+  .route-arrow { color: var(--text-muted); font-size: 14px; padding: 0 2px; }
+
+  .date-cell { font-family: var(--mono); font-size: 11px; color: var(--text-dim); }
+  .date-main { font-size: 12px; color: var(--text); font-weight: 500; }
+
+  .type-badge {
+    font-family: var(--mono); font-size: 10px; padding: 2px 7px;
+    border-radius: 3px; background: var(--surface2);
+    border: 1px solid var(--border); color: var(--text-dim);
+  }
+  .type-badge.FTL { color: var(--accent); border-color: #2a4a8a; background: #0d1525; }
+  .type-badge.LTL { color: #a78bfa; border-color: #3d2a6a; background: #14102a; }
+
+  .price-cell { font-family: var(--mono); white-space: nowrap; }
+  .price-main { font-size: 14px; font-weight: 600; color: var(--text); }
+  .price-km { font-size: 10px; color: var(--text-muted); margin-top: 1px; }
+  .dist-cell { font-family: var(--mono); font-size: 12px; color: var(--text-dim); }
+  .cap-cell { font-family: var(--mono); font-size: 12px; }
+
+  /* Interest button in table */
+  .interest-btn {
+    padding: 5px 12px; border-radius: 4px; font-size: 11px;
+    font-family: var(--mono); font-weight: 600; cursor: pointer;
+    border: 1px solid; transition: all 0.15s; white-space: nowrap;
+  }
+  .interest-btn.idle {
+    background: transparent; border-color: var(--accent); color: var(--accent);
+  }
+  .interest-btn.idle:hover { background: var(--accent-dim); }
+  .interest-btn.pending {
+    background: var(--yellow-bg); border-color: var(--yellow-border);
+    color: var(--yellow); cursor: default;
+  }
+  .interest-btn.accepted {
+    background: var(--green-bg); border-color: var(--green-border);
+    color: var(--green); cursor: pointer;
+  }
+  .interest-btn.rejected {
+    background: var(--gray-bg); border-color: var(--gray-border);
+    color: var(--gray); cursor: default;
+  }
+
+  /* Interest modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    z-index: 500; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 24px; width: 420px; max-width: 95vw;
+  }
+  .modal h3 { font-family: var(--mono); font-size: 13px; font-weight: 600; margin-bottom: 16px; color: var(--text); }
+  .modal textarea {
+    width: 100%; background: var(--bg); border: 1px solid var(--border);
+    color: var(--text); padding: 10px; border-radius: 5px;
+    font-family: var(--sans); font-size: 13px; resize: vertical;
+    min-height: 80px; outline: none;
+  }
+  .modal textarea:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 14px; justify-content: flex-end; }
+  .btn-cancel {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--text-dim); padding: 8px 16px; border-radius: 5px;
+    cursor: pointer; font-size: 13px;
+  }
+  .btn-send-interest {
+    background: var(--accent); border: none; color: #fff;
+    padding: 8px 18px; border-radius: 5px; cursor: pointer;
+    font-size: 13px; font-weight: 600;
+  }
+  .btn-send-interest:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .empty-state { text-align: center; padding: 80px 24px; color: var(--text-muted); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text-dim); }
+
+  .refresh-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 24px; font-size: 10px; font-family: var(--mono);
+    color: var(--text-muted); background: var(--surface);
+    border-bottom: 1px solid var(--border);
+  }
+  .refresh-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green); animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    padding: 12px 18px; border-radius: 5px; font-size: 13px;
+    z-index: 999; opacity: 0; transform: translateY(10px); transition: all 0.2s;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { border-color: var(--red); color: var(--red); }
+  .toast.success { border-color: var(--green); color: var(--green); }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>{{ title|default:"Freight Exchange" }}</h1>
+  <h1>{{ request.user.username }}</h1>
+  <div class="topbar-sep"></div>
+
+  {% if role == 'shipper' %}
+  <!-- Shipper sees interests link with pending count badge -->
+  <a href="{% url 'interests_page' %}" class="interests-btn">
+    📋 My Interests
+    {% with pending_total=0 %}
+    {# pending count injected via context if needed #}
+    {% endwith %}
+  </a>
+  {% endif %}
+
+  {% if role == 'carrier' %}
+  <a href="{% url 'my_chats' %}" class="interests-btn">💬 My Chats</a>
+  {% endif %}
+
+  <!-- Notification bell — visible to all -->
+  <div class="bell-wrapper">
+    <button class="bell-btn" id="bellBtn" onclick="toggleNotifDropdown()">
+      🔔
+      <span class="bell-badge {% if not unread_count %}hidden{% endif %}" id="bellBadge">
+        {{ unread_count }}
+      </span>
+    </button>
+    <div class="notif-dropdown" id="notifDropdown">
+      <div class="notif-header">
+        Notifications
+        <button class="notif-mark-read" onclick="markAllRead()">Mark all read</button>
+      </div>
+      <div class="notif-list" id="notifList">
+        <div class="notif-empty">Loading…</div>
+      </div>
+    </div>
+  </div>
+
+  <a href="{% url 'add_load' %}" class="btn-add">+ Add freight</a>
+</div>
+
+<div class="legend">
+  <span class="legend-label">Pickup urgency:</span>
+  <span class="legend-item"><span class="dot red"></span> &lt;24h urgent</span>
+  <span class="legend-item"><span class="dot yellow"></span> 24–48h</span>
+  <span class="legend-item"><span class="dot green"></span> 48–72h</span>
+  <span class="legend-item"><span class="dot white"></span> 72h+</span>
+  <span class="legend-item"><span class="dot gray"></span> Expired</span>
+</div>
+
+<div class="refresh-bar">
+  <span class="refresh-dot"></span>
+  <span>Live — refreshes every 60s</span>
+  <span id="loadCount" style="margin-left:auto">{{ loads|length }} load{{ loads|length|pluralize }} active</span>
+</div>
+
+<div class="filters">
+  <button class="filter-btn active" onclick="filterLoads('all', this)">All</button>
+  <button class="filter-btn" onclick="filterLoads('red', this)">🔴 Urgent (&lt;24h)</button>
+  <button class="filter-btn" onclick="filterLoads('yellow', this)">🟡 24–48h</button>
+  <button class="filter-btn" onclick="filterLoads('green', this)">🟢 48–72h</button>
+  <button class="filter-btn" onclick="filterLoads('white', this)">⚪ 72h+</button>
+  <button class="filter-btn" onclick="filterLoads('gray', this)">⛔ Expired</button>
+  <button class="filter-btn" onclick="filterLoads('FTL', this)">FTL</button>
+  <button class="filter-btn" onclick="filterLoads('LTL', this)">LTL</button>
+</div>
+
+<div class="table-wrapper">
+  {% if loads %}
+  <table id="loadTable">
+    <thead>
+      <tr>
+        <th style="width:4px"></th>
+        <th>Urgency</th>
+        <th>Route</th>
+        <th>Pickup date</th>
+        <th>Delivery date</th>
+        <th>Type</th>
+        <th>Capacity</th>
+        <th>Distance</th>
+        <th>Price</th>
+        <th>Body</th>
+        <th>Published by</th>
+        {% if role == 'carrier' %}<th>Interest</th>{% endif %}
+        {% if role == 'shipper' %}<th>Interests</th>{% endif %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in loads %}
+      <tr
+        class="status-{{ item.color }}"
+        data-load-id="{{ item.load.pk }}"
+        data-color="{{ item.color }}"
+        data-load-type="{{ item.load.load_type }}"
+        onclick="handleRowClick(event, {{ item.load.pk }})">
+
+        <td class="color-stripe"></td>
+
+        <td>
+          <span class="status-pill {{ item.color }}">
+            <span class="status-icon">
+              {% if item.color == 'red' %}🔴{% elif item.color == 'yellow' %}🟡{% elif item.color == 'green' %}🟢{% elif item.color == 'gray' %}⛔{% else %}⚪{% endif %}
+            </span>
+            <span class="status-label">{{ item.color_label }}</span>
+          </span>
+        </td>
+
+        <td>
+          <div class="route-cell">
+            {% if item.pickup %}
+            <div class="route-place">
+              <span class="route-country">{{ item.pickup.country }}</span>
+              <span class="route-city">{{ item.pickup.city }}</span>
+              <span class="route-postal">{{ item.pickup.postal_code|default:"" }}</span>
+            </div>
+            {% else %}
+            <div class="route-place"><span class="route-country">—</span><span class="route-city">—</span></div>
+            {% endif %}
+            <span class="route-arrow">→</span>
+            {% if item.delivery %}
+            <div class="route-place">
+              <span class="route-country">{{ item.delivery.country }}</span>
+              <span class="route-city">{{ item.delivery.city }}</span>
+              <span class="route-postal">{{ item.delivery.postal_code|default:"" }}</span>
+            </div>
+            {% else %}
+            <div class="route-place"><span class="route-country">—</span><span class="route-city">—</span></div>
+            {% endif %}
+          </div>
+        </td>
+
+        <td class="date-cell">
+          {% if item.pickup %}
+            <div class="date-main">{{ item.pickup.date_from|date:"d.m.Y" }}</div>
+            <div>{{ item.pickup.date_from|date:"H:i" }}</div>
+          {% else %}—{% endif %}
+        </td>
+
+        <td class="date-cell">
+          {% if item.delivery %}
+            <div class="date-main">{{ item.delivery.date_from|date:"d.m.Y" }}</div>
+            <div>{{ item.delivery.date_from|date:"H:i" }}</div>
+          {% else %}—{% endif %}
+        </td>
+
+        <td><span class="type-badge {{ item.load.load_type }}">{{ item.load.load_type }}</span></td>
+
+        <td class="cap-cell">
+          {% if item.load.capacity %}{{ item.load.capacity }}t{% else %}—{% endif %}
+          {% if item.load.load_meters %}<br><span style="color:var(--text-muted)">{{ item.load.load_meters }} ldm</span>{% endif %}
+        </td>
+
+        <td class="dist-cell">
+          {% if item.load.mileage %}{{ item.load.mileage|floatformat:0 }} mi{% else %}—{% endif %}
+        </td>
+
+        <td class="price-cell">
+          {% if item.load.total_price %}
+            <div class="price-main">{{ item.load.total_price }} {{ item.load.currency }}</div>
+            {% if item.load.price_per_mile %}<div class="price-km">{{ item.load.price_per_mile }} /mi</div>{% endif %}
+          {% else %}<span style="color:var(--text-muted)">—</span>{% endif %}
+        </td>
+
+        <td style="color:var(--text-dim)">{{ item.load.get_body_type_display|default:"—" }}</td>
+
+        <td style="color:var(--text-muted);font-size:11px">
+          {% if item.load.created_by %}
+            {{ item.load.created_by.get_full_name|default:item.load.created_by.username }}
+          {% else %}—{% endif %}
+          <br>{{ item.load.created_at|date:"d.m H:i" }}
+        </td>
+
+        {% if role == 'carrier' %}
+        <td onclick="event.stopPropagation()">
+          {% if item.load.created_by == request.user %}
+            <span style="color:var(--text-muted);font-size:11px">Your load</span>
+          {% elif item.interest_status == 'pending' %}
+            <button class="interest-btn pending" disabled>⏳ Pending</button>
+          {% elif item.interest_status == 'accepted' %}
+            <button class="interest-btn accepted" onclick="goToChat({{ item.load.pk }})">💬 Chat Open</button>
+          {% elif item.interest_status == 'rejected' %}
+            <button class="interest-btn rejected" disabled>✗ Rejected</button>
+          {% else %}
+            <button class="interest-btn idle" onclick="openInterestModal({{ item.load.pk }})">+ Interested</button>
+          {% endif %}
+        </td>
+        {% endif %}
+
+        {% if role == 'shipper' %}
+        <td onclick="event.stopPropagation()">
+          {% if item.interest_count > 0 %}
+            <a href="{% url 'interests_page' %}?load={{ item.load.pk }}" style="color:var(--accent);font-family:var(--mono);font-size:11px;">
+              {{ item.interest_count }} interest{{ item.interest_count|pluralize }}
+            </a>
+          {% else %}
+            <span style="color:var(--text-muted);font-size:11px">—</span>
+          {% endif %}
+        </td>
+        {% endif %}
+
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">🚚</div>
+    <h3>No active loads</h3>
+    <p>Publish your first freight load to see it here.</p>
+    <br>
+    <a href="{% url 'add_load' %}" class="btn-add" style="display:inline-flex">+ Add freight</a>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Interest modal -->
+<div class="modal-overlay" id="interestModal">
+  <div class="modal">
+    <h3>Express Interest</h3>
+    <p style="color:var(--text-dim);font-size:12px;margin-bottom:12px">
+      Send an optional message to the shipper with your interest.
+    </p>
+    <textarea id="interestMessage" placeholder="Optional: introduce yourself, your truck specs, availability…" maxlength="500"></textarea>
+    <div style="text-align:right;color:var(--text-muted);font-size:10px;margin-top:4px">
+      <span id="msgCount">0</span>/500
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeInterestModal()">Cancel</button>
+      <button class="btn-send-interest" id="sendInterestBtn" onclick="submitInterest()">Send Interest</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CURRENT_USER_ID = {{ request.user.pk }};
+const USER_ROLE = "{{ role }}";
+let activeLoadPk = null;
+
+// ── Row click ──────────────────────────────────
+function handleRowClick(e, loadPk) {
+  // Don't navigate if clicking action cells
+  if (e.target.closest('button') || e.target.closest('a')) return;
+  window.location.href = `/${loadPk}/`;
+}
+
+// ── Interest modal ─────────────────────────────
+function openInterestModal(loadPk) {
+  activeLoadPk = loadPk;
+  document.getElementById('interestMessage').value = '';
+  document.getElementById('msgCount').textContent = '0';
+  document.getElementById('interestModal').classList.add('open');
+  setTimeout(() => document.getElementById('interestMessage').focus(), 50);
+}
+
+function closeInterestModal() {
+  document.getElementById('interestModal').classList.remove('open');
+  activeLoadPk = null;
+}
+
+document.getElementById('interestMessage').addEventListener('input', e => {
+  document.getElementById('msgCount').textContent = e.target.value.length;
+});
+
+// Close modal on overlay click
+document.getElementById('interestModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeInterestModal();
+});
+
+async function submitInterest() {
+  if (!activeLoadPk) return;
+  const btn = document.getElementById('sendInterestBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  const message = document.getElementById('interestMessage').value.trim();
+
+  try {
+    const res = await fetch(`/interest/${activeLoadPk}/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+      body: JSON.stringify({ message }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showToast('Interest sent! Waiting for shipper response.', 'success');
+      closeInterestModal();
+
+      // Update button in the row
+      const row = document.querySelector(`tr[data-load-id="${activeLoadPk}"]`);
+      if (row) {
+        const btnCell = row.querySelector('.interest-btn');
+        if (btnCell) {
+          btnCell.className = 'interest-btn pending';
+          btnCell.disabled = true;
+          btnCell.textContent = '⏳ Pending';
+        }
+      }
+    } else {
+      showToast(data.error || 'Error sending interest.', 'error');
+    }
+  } catch {
+    showToast('Network error.', 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Send Interest';
+}
+
+function goToChat(loadPk) {
+  // Find the accepted interest chat — we redirect via interests page
+  window.location.href = `/interests/`;
+}
+
+// ── Notifications ──────────────────────────────
+let notifOpen = false;
+
+function toggleNotifDropdown() {
+  notifOpen = !notifOpen;
+  document.getElementById('notifDropdown').classList.toggle('open', notifOpen);
+  if (notifOpen) loadNotifications();
+}
+
+// Close on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.bell-wrapper')) {
+    notifOpen = false;
+    document.getElementById('notifDropdown').classList.remove('open');
+  }
+});
+
+async function loadNotifications() {
+  try {
+    const res = await fetch('/api/notifications/');
+    const data = await res.json();
+    renderNotifications(data.notifications, data.unread_count);
+  } catch {}
+}
+
+function renderNotifications(notifs, unreadCount) {
+  const list = document.getElementById('notifList');
+  const badge = document.getElementById('bellBadge');
+
+  badge.textContent = unreadCount;
+  badge.classList.toggle('hidden', unreadCount === 0);
+
+  if (!notifs.length) {
+    list.innerHTML = '<div class="notif-empty">No notifications yet.</div>';
+    return;
+  }
+
+  list.innerHTML = notifs.map(n => `
+    <div class="notif-item ${n.is_read ? '' : 'unread'}"
+         onclick="handleNotifClick('${n.notification_type}', '${n.chat_url || ''}', '${n.interests_url || ''}')">
+      <div class="notif-text">${escapeHtml(n.text)}</div>
+      <div class="notif-time">${formatTime(n.created_at)}</div>
+    </div>
+  `).join('');
+}
+
+function handleNotifClick(type, chatUrl, interestsUrl) {
+  if (type === 'accepted' && chatUrl) {
+    window.location.href = chatUrl;
+  } else if (type === 'interest' && interestsUrl) {
+    window.location.href = interestsUrl;
+  } else if (type === 'message' && chatUrl) {
+    window.location.href = chatUrl;
+  }
+}
+
+async function markAllRead() {
+  await fetch('/api/notifications/read/', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+  });
+  await loadNotifications();
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Filter ─────────────────────────────────────
+function filterLoads(type, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#loadTable tbody tr').forEach(row => {
+    if (type === 'all') row.style.display = '';
+    else if (['FTL', 'LTL'].includes(type)) row.style.display = row.dataset.loadType === type ? '' : 'none';
+    else row.style.display = row.dataset.color === type ? '' : 'none';
+  });
+}
+
+// ── Live refresh ───────────────────────────────
+function getStatusIcon(color) {
+  if (color === 'red') return '🔴';
+  if (color === 'yellow') return '🟡';
+  if (color === 'green') return '🟢';
+  if (color === 'gray') return '⛔';
+  return '⚪';
+}
+
+setInterval(() => {
+  fetch('/api/loads/')
+    .then(r => r.json())
+    .then(data => {
+      const countEl = document.getElementById('loadCount');
+      if (countEl && data.loads) {
+        countEl.textContent = `${data.loads.length} load${data.loads.length === 1 ? '' : 's'} active`;
+      }
+      data.loads.forEach(load => {
+        const row = document.querySelector(`tr[data-load-id="${load.id}"]`);
+        if (!row) return;
+        row.className = `status-${load.color}`;
+        row.dataset.color = load.color;
+        const pill = row.querySelector('.status-pill');
+        const icon = row.querySelector('.status-icon');
+        const label = row.querySelector('.status-label');
+        if (pill) pill.className = `status-pill ${load.color}`;
+        if (icon) icon.textContent = getStatusIcon(load.color);
+        if (label) label.textContent = load.color_label || '';
+      });
+    })
+    .catch(() => {});
+}, 60000);
+
+// Poll notifications every 30s
+setInterval(() => {
+  fetch('/api/notifications/')
+    .then(r => r.json())
+    .then(data => {
+      const badge = document.getElementById('bellBadge');
+      badge.textContent = data.unread_count;
+      badge.classList.toggle('hidden', data.unread_count === 0);
+    })
+    .catch(() => {});
+}, 30000);
+
+// ── Utils ──────────────────────────────────────
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast show ${type}`;
+  setTimeout(() => { t.className = 'toast'; }, 3500);
+}
+
+function getCookie(name) {
+  return document.cookie.split(';').map(c => c.trim())
+    .find(c => c.startsWith(name + '='))?.split('=')[1] || '';
+}
+</script>
+</body>
+</html>
